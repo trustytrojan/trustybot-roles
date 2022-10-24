@@ -1,5 +1,4 @@
 const { randomUUID } = require('crypto');
-const { inspect } = require('util');
 const Discord = require('discord.js');
 const { writeFileSync, existsSync } = require('fs');
 
@@ -114,7 +113,7 @@ client.on('interactionCreate', async (interaction) => {
   else if(interaction.isButton()) {
     const { customId } = interaction;
     if((await guild?.roles.fetch()).has(customId)) {
-      if(!(member instanceof Discord.GuildMember)) { await somethingWentWrong(); return; }
+      if(!(member instanceof Discord.GuildMember)) { somethingWentWrong(); return; }
       if(member.roles.cache.has(customId)) {
         await member.roles.remove(customId);
         await interaction.replyEphemeral(`removed <@&${customId}>!`);
@@ -135,8 +134,8 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 process.on('uncaughtException', (err) => { console.error(err); kill(); });
-process.on('SIGTERM', () => { console.error('SIGTERM'); kill(); });
-process.on('SIGINT', () => { console.error('SIGINT'); kill(); });
+process.on('SIGTERM', kill);
+process.on('SIGINT', kill);
 
 Discord.BaseInteraction.prototype.replyEphemeral = async function(x) {
   if(typeof x === 'string')
@@ -168,4 +167,4 @@ function writeData() {
 
 function kill() { client.destroy(); writeData(); process.exit(); }
 
-client.login(require('./token.json').token);
+client.login(require('./token.json'));
