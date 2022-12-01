@@ -7,6 +7,8 @@ const { Primary, Secondary, Success, Danger } = Discord.ButtonStyle;
 const { Short, Paragraph } = Discord.TextInputStyle;
 const { Subcommand, String, Role } = Discord.ApplicationCommandOptionType;
 
+const { global, guild } = require('./command-data');
+
 const single_roles = new Discord.Collection();
 
 const sr_file = './single_roles.json';
@@ -24,7 +26,6 @@ const client = new Discord.Client({
 let owner;
 
 client.on('ready', async (client) => {
-  //setCommands();
   ({ owner } = await client.application.fetch());
   console.log(`Logged in as ${client.user.tag}!`);
 });
@@ -33,7 +34,7 @@ client.on('interactionCreate', async (interaction) => {
   function somethingWentWrong() {
     interaction.replyEphemeral(`something went wrong, please try again`).catch(console.error);
   }
-  const { user, member, guild, guildId, channel, channelId } = interaction;
+  const { user, member, guild, channelId } = interaction;
   const myPerms = guild.members.me.permissions;
 
   if(interaction.inGuild()) {
@@ -67,19 +68,18 @@ client.on('interactionCreate', async (interaction) => {
       case 'create': switch(options.getSubcommand()) {
         case 'button_roles': {
           // check permissions
-          if(!myPerms.has('ManageRoles')) {
-            await interaction.replyEphemeral('i need `Manage Roles` perms to create button roles');
-            break;
-          }
-          if(!member.permissions.has('ManageRoles')) {
-            await interaction.replyEphemeral('you need `Manage Roles` perms to create button roles');
-            break;
-          }
+          if(!myPerms.has('ManageRoles'))
+            { await interaction.replyEphemeral('i need `Manage Roles` perms to create button roles'); break; }
+          if(!member.permissions.has('ManageRoles'))
+            { await interaction.replyEphemeral('you need `Manage Roles` perms to create button roles'); break; }
           
           // collect roles and create button objects
           const buttons = [];
           let single_role = false;
           for(const { name, role, value } of options.data[0].options) {
+            if(!(role instanceof Discord.Role)) { somethingWentWrong(); return; }
+            if(role.comparePositionTo(guild.members.me.roles.botRole) > 0)
+              { await interaction.replyEphemeral(`my role is lower than ${role}! please move me above this role so i can give it to members!`); return; }
             if(name === 'single_role') { single_role = value; continue; }
             buttons.push({ type: Button, label: role.name, customId: role.id, style: Primary });
           }
@@ -153,38 +153,47 @@ client.on('interactionCreate', async (interaction) => {
 
 });
 
+client.on('guildCreate', ({ commands }) => commands.set(guild));
+
 process.on('uncaughtException', (err) => { console.error(err); kill(); });
 process.on('SIGTERM', kill);
 process.on('SIGINT', kill);
 
-Discord.BaseInteraction.prototype.replyEphemeral = async function(x) {
+/**
+ * shortcut for replying with an ephemeral message
+ * @param {string | object} x
+ */
+Discord.BaseInteraction.prototype.replyEphemeral = function(x) {
+  if(!this.reply)
+    throw new TypeError('type of "this" does not have "reply" property method');
   if(typeof x === 'string')
-    await this.reply({ content: x, ephemeral: true });
-  else if(typeof x === 'object') {
+    return this.reply({ content: x, ephemeral: true });
+  if(typeof x === 'object') {
     x.ephemeral = true;
-    await this.reply(x);
+    return this.reply(x);
   }
+  throw new TypeError(`Expected argument of type "string" or "object", received "${typeof x}" instead`);
 }
 
 /**
+ * formats an error to be sent in discord
  * @param {Error} err
  * @returns {string}
  */
-function error_str(err) {
-  return `**this is an error**\`\`\`js\n${err}\`\`\``;
-}
+const error_str = (err) => `**this is an error**\`\`\`js\n${err.stack ?? err}\`\`\``;
 
+// for use with /eval
 function setCommands() {
-  const { global, guild } = require('./command-data');
   client.application.commands.set(global).catch(console.error);
   for(const { commands } of client.guilds.cache.values())
     commands.set(guild).catch(console.error);
 }
 
-function writeData() {
-  writeFileSync(sr_file, JSON.stringify(single_roles, null, '  '));
-}
+// save single role channels
+const writeData = () => writeFileSync(sr_file, JSON.stringify(single_roles, null, '  '));
 
+// disconnect from discord, save data, end process
 function kill() { client.destroy(); writeData(); process.exit(); }
 
+// token.json should only contain a string (not an object)
 client.login(require('./token.json'));
