@@ -16,9 +16,12 @@ module.exports = {
   /** @type {Discord.APIApplicationCommand[]} */
   global: [
     { name: 'ping', description: 'check ping' },
-    { name: 'eval', description: 'only my owner can use this command!' }
+    { name: 'eval', description: 'only my owner can use this command!', options: [
+      { name: '' }
+    ] }
   ],
 
+  /** @type {Discord.APIApplicationCommand[]} */
   guild: [
     { name: 'create', description: 'create a role interface', options: [
       { name: 'button_roles', type: Subcommand, description: 'create button roles', options: button_roles_options },

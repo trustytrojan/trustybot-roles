@@ -8,13 +8,12 @@ const { Short, Paragraph } = Discord.TextInputStyle;
 const { Subcommand, String, Role } = Discord.ApplicationCommandOptionType;
 
 const { global, guild } = require('./command-data');
+const { formatError, readSingleRoles, writeSingleRoles, SingleRole } = require('./utils');
 
-const single_roles = new Discord.Collection();
+// run the code in prototypes.js to set desired methods in class prototypes
+require('./prototypes');
 
-const sr_file = './single_roles.json';
-if(existsSync(sr_file))
-  for(const o of require(sr_file))
-    single_roles.set(o.channel, o);
+const single_roles = readSingleRoles();
 
 const client = new Discord.Client({
   intents: [
@@ -23,6 +22,7 @@ const client = new Discord.Client({
   ],
 });
 
+/** @type {Discord.User} */
 let owner;
 
 client.on('ready', async (client) => {
@@ -31,11 +31,9 @@ client.on('ready', async (client) => {
 });
 
 client.on('interactionCreate', async (interaction) => {
-  function somethingWentWrong() {
-    interaction.replyEphemeral(`something went wrong, please try again`).catch(console.error);
-  }
   const { user, member, guild, channelId } = interaction;
   const myPerms = guild.members.me.permissions;
+  const somethingWentWrong = () => interaction.replyEphemeral('something went wrong, please try again').catch(handleError);
 
   if(interaction.inGuild()) {
     if(!guild) { somethingWentWrong(); return; }
@@ -45,26 +43,7 @@ client.on('interactionCreate', async (interaction) => {
     const { commandName, options } = interaction;
     switch(commandName) {
       case 'ping': await interaction.reply(`\`${client.ws.ping}ms\``); break;
-      case 'eval': {
-        if(user.id !== owner.id) { await interaction.reply('only my owner can use this command!'); break; }
-        let code = options.getString('code');
-        if(code.includes('await')) { code = `(async () => { ${code} })().catch(handleError)`; }
-        let output;
-        const inspect_options = {
-          depth: options.getInteger('depth'),
-          showHidden: options.getBoolean('showHidden')
-        };
-        try { output = require('util').inspect(await eval(code), inspect_options); }
-        catch(err) { await interaction.reply(error_str(err)); break; }
-        let x;
-        if(output.length <= 2000)
-          x = '```js\n'+output+'```';
-        else if(output.length > 2000 && output.length <= 4096)
-          x = { embeds: [{ description: '```js\n'+output+'```' }] };
-        else if(output.length > 4096)
-          x = { files: [{ attachment: Buffer.from(output), name: 'output.js'}] };
-        await interaction.reply(x);
-      } break;
+      case 'eval': require('./eval-cmd')(interaction, owner); break;
       case 'create': switch(options.getSubcommand()) {
         case 'button_roles': {
           // check permissions
@@ -115,7 +94,7 @@ client.on('interactionCreate', async (interaction) => {
           // send message and save id if single_role was enabled
           try {
             const { id } = await modal_int.reply({ content, fetchReply: true, components: final_message_components });
-            if(single_role) single_roles.ensure(channelId, () => ({ channelId, messages: [id] }));
+            if(single_role) single_roles.ensure(channelId, () => new SingleRole(channelId)).messages.push(id);
           } catch(err) {
             if(err.message.includes('emoji'))
               await modal_int.replyEphemeral('invalid emoji(s) supplied!');
@@ -155,32 +134,15 @@ client.on('interactionCreate', async (interaction) => {
 
 client.on('guildCreate', ({ commands }) => commands.set(guild));
 
-process.on('uncaughtException', (err) => { console.error(err); kill(); });
+process.on('uncaughtException', async (err) => { await handleError(err); kill(); });
 process.on('SIGTERM', kill);
 process.on('SIGINT', kill);
 
-/**
- * shortcut for replying with an ephemeral message
- * @param {string | object} x
- */
-Discord.BaseInteraction.prototype.replyEphemeral = function(x) {
-  if(!this.reply)
-    throw new TypeError('type of "this" does not have "reply" property method');
-  if(typeof x === 'string')
-    return this.reply({ content: x, ephemeral: true });
-  if(typeof x === 'object') {
-    x.ephemeral = true;
-    return this.reply(x);
-  }
-  throw new TypeError(`Expected argument of type "string" or "object", received "${typeof x}" instead`);
+/** @param {Error} err */
+async function handleError(err) {
+  console.error(err);
+  await owner.send(error_str(err));
 }
-
-/**
- * formats an error to be sent in discord
- * @param {Error} err
- * @returns {string}
- */
-const error_str = (err) => `**this is an error**\`\`\`js\n${err.stack ?? err}\`\`\``;
 
 // for use with /eval
 function setCommands() {
