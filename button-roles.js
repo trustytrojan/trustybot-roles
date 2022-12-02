@@ -1,8 +1,10 @@
 const { randomUUID } = require('crypto');
-const { ChatInputCommandInteraction, Collection, ComponentType, TextInputStyle, Role } = require('discord.js');
+const { ChatInputCommandInteraction, Collection, ComponentType, TextInputStyle, ButtonStyle, Role } = require('discord.js');
 const { ActionRow, Button, TextInput } = ComponentType;
 const { Paragraph, Short } = TextInputStyle;
-const { SingleRole, formatError } = require('../utils');
+const { Primary } = ButtonStyle;
+const { formatError } = require('./utils');
+const { SingleRole } = require('./SingleRole');
 
 /**
  * @param {ChatInputCommandInteraction} interaction 
@@ -10,6 +12,7 @@ const { SingleRole, formatError } = require('../utils');
  */
 module.exports = async function(interaction, single_roles) {
   const { client, member, guild, options, channelId } = interaction;
+  const myPerms = guild.members.me.permissions;
 
   // check permissions
   if(!myPerms.has('ManageRoles'))
@@ -20,8 +23,8 @@ module.exports = async function(interaction, single_roles) {
   // collect roles and create button objects
   const buttons = [];
   let single_role = false;
-  for(let { name, role, value } of options.data[0].options) {
-    if(!(role instanceof Role)) { role = new Role(client, role, guild); }
+  for(let { name, role, value } of options.data) {
+    if(!(role instanceof Role)) role = new Role(client, role, guild);
     if(role.comparePositionTo(guild.members.me.roles.botRole) > 0)
       { await interaction.replyEphemeral(`my role is lower than ${role}! please move me above this role so i can give it to members!`); return; }
     if(name === 'single_role') { single_role = value; continue; }

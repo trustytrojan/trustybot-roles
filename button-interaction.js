@@ -7,9 +7,10 @@ const { SingleRole } = require('./SingleRole');
  * @param {Collection<string,SingleRole>} single_roles 
  */
 module.exports = async function(interaction, single_roles) {
-  const { member, customId, guild } = interaction;
+  const { message, customId, guild, channelId } = interaction;
+  let { member } = interaction;
   if((await guild?.roles?.fetch()).has(customId)) {
-    if(!(member instanceof GuildMember)) { somethingWentWrong(interaction); return; }
+    if(!(member instanceof GuildMember)) member = new GuildMember(client, member, guild);
     if(member.roles.cache.has(customId)) {
       await member.roles.remove(customId);
       await interaction.replyEphemeral(`removed <@&${customId}>!`);

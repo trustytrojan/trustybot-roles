@@ -1,4 +1,4 @@
-const { existsSync, writeFileSync } = require('fs');
+const { existsSync, writeFileSync, readFileSync } = require('fs');
 const { Collection } = require('discord.js');
 
 const sr_file = './single_roles.json';
@@ -9,7 +9,7 @@ const sr_file = './single_roles.json';
  * @param {string[] | undefined} messages 
  */
 class SingleRole {
-  /** @type {string[]} */ messages;
+  /** @type {string[]} */ messages = [];
 
   /**
    * @param {string} channel 
@@ -17,10 +17,7 @@ class SingleRole {
    */
   constructor(channel, messages) {
     this.channel = channel;
-    if(messages)
-      this.messages = messages;
-    else
-      this.messages = [];
+    if(messages) this.messages = messages;
   }
 }
 
@@ -29,7 +26,7 @@ class SingleRole {
  */
 function readSingleRoles() {
   const single_roles = new Collection();
-  if(existsSync(sr_file))
+  if(existsSync(sr_file) && readFileSync(sr_file).length > 0)
     for(const { channel, messages } of require(sr_file))
       single_roles.set(channel, new SingleRole(channel, messages));
   return single_roles;
@@ -41,7 +38,7 @@ function readSingleRoles() {
 const writeSingleRoles = (single_roles) => writeFileSync(sr_file, JSON.stringify(single_roles, null, '  '));
 
 module.exports = {
-  SingleRole,
+  get SingleRole() { return SingleRole; },
   get readSingleRoles() { return readSingleRoles; },
   get writeSingleRoles() { return writeSingleRoles; }
 };

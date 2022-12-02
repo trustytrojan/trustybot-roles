@@ -1,23 +1,20 @@
 const { BaseInteraction, User, Client } = require('discord.js');
 
 /**
+ * reference necessary for `handleError` to send messages to the bot owner
+ * @type {User | undefined}
+ */
+let owner;
+
+/** @param {Client} */
+const initOwner = async ({ application }) => ({ owner } = await application.fetch());
+
+/**
  * formats an error to be sent in discord
  * @param {Error} err
  * @returns {string}
  */
 const formatError = (err) => `**this is an error**\`\`\`js\n${err.stack ?? err}\`\`\``;
-
-
-/**
- * reference necessary for `handleError` to send messages to the bot owner
- * @type {User}
- */
-let owner;
-
-/**
- * @param {Client}
- */
-const initOwner = async ({ application }) => ({ owner } = await application.fetch());
 
 /** 
  * notifies the bot owner of an error
@@ -25,7 +22,7 @@ const initOwner = async ({ application }) => ({ owner } = await application.fetc
  */
 async function handleError(err) {
   console.error(err);
-  await owner.send(error_str(err));
+  await owner?.send(formatError(err));
 }
 
 /**
