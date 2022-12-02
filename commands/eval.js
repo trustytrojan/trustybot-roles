@@ -1,5 +1,5 @@
 const { ChatInputCommandInteraction, User } = require('discord.js');
-const { error_str } = require('./utils');
+const { formatError } = require('../utils');
 
 /**
  * @param {ChatInputCommandInteraction} interaction 
@@ -16,7 +16,7 @@ module.exports = async function(interaction, owner) {
     showHidden: options.getBoolean('showHidden')
   };
   try { output = require('util').inspect(await eval(code), inspect_options); }
-  catch(err) { await interaction.reply(error_str(err)); return; }
+  catch(err) { await interaction.reply(formatError(err)); return; }
   let x;
   if(output.length <= 2000)
     x = '```js\n'+output+'```';

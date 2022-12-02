@@ -1,37 +1,4 @@
-const { existsSync, writeFileSync } = require('fs');
-const { Collection } = require('discord.js');
-const sr_file = './single_roles.json';
-
-/**
- * Stores the IDs of single-role messages in a channel.
- * @param {string} channel 
- * @param {string[] | undefined} messages 
- */
-function SingleRole(channel, messages) {
-  /** @type {string[]} */ this.messages;
-  
-  this.channel = channel;
-  if(messages)
-    this.messages = messages;
-  else
-    this.messages = [];
-}
-
-/**
- * @returns {Collection<string,SingleRole>}
- */
-function readSingleRoles() {
-  const single_roles = new Collection();
-  if(existsSync(sr_file))
-    for(const { channel, messages } of require(sr_file))
-      single_roles.set(channel, new SingleRole(channel, messages));
-  return single_roles;
-}
-
-/**
- * @param {Collection<string,SingleRole>} single_roles 
- */
-const writeSingleRoles = (single_roles) => writeFileSync(sr_file, JSON.stringify(single_roles, null, '  '));
+const { BaseInteraction, User, Client } = require('discord.js');
 
 /**
  * formats an error to be sent in discord
@@ -40,9 +7,36 @@ const writeSingleRoles = (single_roles) => writeFileSync(sr_file, JSON.stringify
  */
 const formatError = (err) => `**this is an error**\`\`\`js\n${err.stack ?? err}\`\`\``;
 
+
+/**
+ * reference necessary for `handleError` to send messages to the bot owner
+ * @type {User}
+ */
+let owner;
+
+/**
+ * @param {Client}
+ */
+const initOwner = async ({ application }) => ({ owner } = await application.fetch());
+
+/** 
+ * notifies the bot owner of an error
+ * @param {Error} err
+ */
+async function handleError(err) {
+  console.error(err);
+  await owner.send(error_str(err));
+}
+
+/**
+ * self-explanatory
+ * @param {BaseInteraction} interaction 
+ */
+const somethingWentWrong = (interaction) => interaction.replyEphemeral('something went wrong, please try again').catch(handleError);
+
 module.exports = {
   get formatError() { return formatError; },
-  get readSingleRoles() { return readSingleRoles; },
-  get writeSingleRoles() { return writeSingleRoles; },
-  get SingleRole() { return SingleRole; }
+  get somethingWentWrong() { return somethingWentWrong; },
+  get initOwner() { return initOwner; },
+  get handleError() { return handleError; }
 };
