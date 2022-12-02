@@ -13,8 +13,10 @@ for(let i = 2; i <= 10; ++i) {
 }
 
 module.exports = {
+  /** @type {Discord.APIApplicationCommand[]} */
   global: [
     { name: 'ping', description: 'check ping' },
+    { name: 'eval', description: 'only my owner can use this command!' }
   ],
 
   guild: [
