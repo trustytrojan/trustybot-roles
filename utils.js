@@ -1,13 +1,4 @@
-const { BaseInteraction, User, Client } = require('discord.js');
-
-/**
- * reference necessary for `handleError` to send messages to the bot owner
- * @type {User | undefined}
- */
-let owner;
-
-/** @param {Client} */
-const initOwner = async ({ application }) => ({ owner } = await application.fetch());
+const { BaseInteraction } = require('discord.js');
 
 /**
  * formats an error to be sent in discord
@@ -22,7 +13,7 @@ const formatError = (err) => `**this is an error**\`\`\`js\n${err.stack ?? err}\
  */
 async function handleError(err) {
   console.error(err);
-  await owner?.send(formatError(err));
+  await global.owner?.send(formatError(err));
 }
 
 /**
@@ -34,6 +25,5 @@ const somethingWentWrong = (interaction) => interaction.replyEphemeral('somethin
 module.exports = {
   get formatError() { return formatError; },
   get somethingWentWrong() { return somethingWentWrong; },
-  get initOwner() { return initOwner; },
   get handleError() { return handleError; }
 };

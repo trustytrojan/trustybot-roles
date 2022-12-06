@@ -1,6 +1,6 @@
 const { Client, ChatInputCommandInteraction } = require('discord.js');
 const setCommands = () => require('./command-data')(client);
-const { initOwner, somethingWentWrong, handleError } = require('./utils');
+const { somethingWentWrong, handleError } = require('./utils');
 const { readSingleRoles, writeSingleRoles } = require('./SingleRole');
 
 // run the code in prototypes.js to set desired methods in class prototypes
@@ -15,21 +15,15 @@ const client = new Client({
   ],
 });
 
-client.on('ready', async (client) => {
-  await initOwner(client);
-  console.log(`Logged in as ${client.user.tag}!`);
+client.on('ready', async ({ application, user }) => {
+  global.owner = (await application.fetch()).owner;
+  console.log(`Logged in as ${user.tag}!`);
 });
 
 client.on('interactionCreate', async (interaction) => {
-  const { guild } = interaction;
-
-  if(interaction.inGuild()) {
-    if(!guild) { somethingWentWrong(client); return; }
-  }
 
   if(interaction.isChatInputCommand()) {
-    const { commandName, options } = interaction;
-    try { switch(commandName) {
+    try { switch(interaction.commandName) {
       case 'ping': await interaction.reply(`\`${client.ws.ping}ms\``); break;
       case 'eval': _eval(interaction); break;
       case 'button_roles': require('./button-roles')(interaction, single_roles); break;
@@ -53,7 +47,7 @@ process.on('SIGINT', kill);
  */
 async function _eval(interaction) {
   const { user, options } = interaction;
-  if(user.id !== owner.id) { await interaction.reply('only my owner can use this command!'); return; }
+  if(user.id !== global.owner.id) { await interaction.reply('only my owner can use this command!'); return; }
   let code = options.getString('code');
   if(code.includes('await')) { code = `(async () => { ${code} })().catch(handleError)`; }
   let output;
