@@ -1,6 +1,6 @@
 const { Client, ChatInputCommandInteraction } = require('discord.js');
 const setCommands = () => require('./command-data')(client);
-const { somethingWentWrong, handleError } = require('./utils');
+const { handleError, initGlobals, clearOwnerDM, sendOwnerButtons } = require('./utils');
 const { readSingleRoles, writeSingleRoles } = require('./SingleRole');
 
 // run the code in prototypes.js to set desired methods in class prototypes
@@ -15,9 +15,13 @@ const client = new Client({
   ],
 });
 
-client.on('ready', async ({ application, user }) => {
-  global.owner = (await application.fetch()).owner;
-  console.log(`Logged in as ${user.tag}!`);
+global.client = client;
+
+client.on('ready', async () => {
+  await initGlobals(client);
+  clearOwnerDM();
+  sendOwnerButtons();
+  console.log(`Logged in as ${client.user.tag}!`);
 });
 
 client.on('interactionCreate', async (interaction) => {
@@ -47,7 +51,8 @@ process.on('SIGINT', kill);
  */
 async function _eval(interaction) {
   const { user, options } = interaction;
-  if(user.id !== global.owner.id) { await interaction.reply('only my owner can use this command!'); return; }
+  if(!global.owner) { await interaction.replyEphemeral('global owner object is undefined!'); return; }
+  if(user.id !== global.owner.id) { await interaction.replyEphemeral('only my owner can use this command!'); return; }
   let code = options.getString('code');
   if(code.includes('await')) { code = `(async () => { ${code} })().catch(handleError)`; }
   let output;
@@ -56,7 +61,7 @@ async function _eval(interaction) {
     showHidden: options.getBoolean('showHidden')
   };
   try { output = require('util').inspect(await eval(code), inspect_options); }
-  catch(err) { await interaction.reply(formatError(err)); return; }
+  catch(err) { await interaction.replyEphemeral(formatError(err)); return; }
   let x;
   if(output.length <= 2000)
     x = '```js\n'+output+'```';

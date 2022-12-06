@@ -40,7 +40,7 @@ module.exports = async function(interaction, single_roles) {
   await interaction.showModal({ customId, title: 'Add message & emojis', components: modal_components });
   let modal_int;
   try { modal_int = await interaction.awaitModalSubmit({ filter: (m) => m.customId === customId, time: 120_000 }); }
-  catch(err) { await interaction.followUp(`${user} you took too long to submit the modal`); return; }
+  catch(err) { await interaction.followUp(`${member} you took too long to submit the modal`); return; }
   const content = modal_int.fields.getTextInputValue('content');
   for(let i = 0; i < buttons.length; ++i) {
     let b;
