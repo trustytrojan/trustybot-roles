@@ -13,7 +13,7 @@ module.exports = async function(interaction) {
   if(user.id !== owner.id) { await interaction.replyEphemeral('only my owner can use this command!'); return; }
 
   // get code from interaction, support async/await
-  let code = options.getString('code');
+  let code = options.getString('expr', true);
   if(code.includes('await')) { code = `(async () => { ${code} })().catch(handleError)`; }
 
   // evaluate expression
