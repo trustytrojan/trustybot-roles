@@ -1,5 +1,5 @@
-const { Client, ChatInputCommandInteraction } = require('discord.js');
-const setCommands = () => require('./command-data')(client);
+const { Client } = require('discord.js');
+const { setCommands, setCommandsForGuild } = require('./command-data');
 const { handleError, initGlobals, clearOwnerDM, sendOwnerButtons } = require('./utils');
 const { readSingleRoles, writeSingleRoles } = require('./SingleRole');
 
@@ -15,6 +15,7 @@ const client = new Client({
   ],
 });
 
+// for compatibility with external code
 global.client = client;
 
 client.on('ready', async () => {
@@ -39,38 +40,11 @@ client.on('interactionCreate', async (interaction) => {
 
 });
 
-client.on('guildCreate', ({ commands }) => commands.set(guild));
+client.on('guildCreate', setCommandsForGuild);
 
 process.on('uncaughtException', (err) => handleError(err).then(kill));
 process.on('SIGTERM', kill);
 process.on('SIGINT', kill);
-
-/**
- * this needs to be in global scope of main.js so the bot owner can access important variables
- * @param {ChatInputCommandInteraction} interaction 
- */
-async function _eval(interaction) {
-  const { user, options } = interaction;
-  if(!global.owner) { await interaction.replyEphemeral('global owner object is undefined!'); return; }
-  if(user.id !== global.owner.id) { await interaction.replyEphemeral('only my owner can use this command!'); return; }
-  let code = options.getString('code');
-  if(code.includes('await')) { code = `(async () => { ${code} })().catch(handleError)`; }
-  let output;
-  const inspect_options = {
-    depth: options.getInteger('depth'),
-    showHidden: options.getBoolean('showHidden')
-  };
-  try { output = require('util').inspect(await eval(code), inspect_options); }
-  catch(err) { await interaction.replyEphemeral(formatError(err)); return; }
-  let x;
-  if(output.length <= 2000)
-    x = '```js\n'+output+'```';
-  else if(output.length > 2000 && output.length <= 4096)
-    x = { embeds: [{ description: '```js\n'+output+'```' }] };
-  else if(output.length > 4096)
-    x = { files: [{ attachment: Buffer.from(output), name: 'output.js'}] };
-  await interaction.replyEphemeral(x);
-}
 
 // disconnect from discord, save data, end process
 function kill() {

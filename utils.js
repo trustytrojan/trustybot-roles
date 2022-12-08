@@ -1,12 +1,13 @@
-const { Message, Client, User, ComponentType, ButtonStyle } = require('discord.js');
+const { Message, Client, User, ComponentType, ButtonStyle, Collection } = require('discord.js');
 const { ActionRow, Button } = ComponentType;
 const { Danger, Primary } = ButtonStyle;
 
 function getGlobals() {
-  const { client, owner } = global;
-  if(!(client instanceof Client)) throw 'global client object is not an instance of Discord.Client!';
-  if(!(owner instanceof User)) throw 'global owner object is not an instance of Discord.User!';
-  return { client, owner };
+  const { client, owner, sr } = global;
+  if(!(client instanceof Client)) throw 'global.client is not an instance of Discord.Client!';
+  if(!(owner instanceof User)) throw 'global.owner is not an instance of Discord.User!';
+  if(!(sr instanceof Collection)) throw 'global.sr is not an instance of Discord.Collection!';
+  return Object.freeze({ client, owner, sr });
 }
 
 /** @param {Client} client */

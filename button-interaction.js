@@ -1,5 +1,6 @@
 const { ButtonInteraction, Collection, GuildMember } = require('discord.js');
-const { somethingWentWrong } = require('./utils');
+const {  } = require('./utils');
+const { setGlobalCommands, setGuildCommands } = require('./command-data');
 const { SingleRole } = require('./SingleRole');
 
 /**
@@ -9,6 +10,13 @@ const { SingleRole } = require('./SingleRole');
 module.exports = async function(interaction, single_roles) {
   const { message, customId, guild, channelId } = interaction;
   let { member } = interaction;
+
+  switch(customId) {
+    case 'kill': 
+    case 'globalcmds': await setGlobalCommands(); return;
+    case 'guildcmds': await setGuildCommands(); return;
+  }
+
   if((await guild?.roles?.fetch()).has(customId)) {
     if(!(member instanceof GuildMember)) member = new GuildMember(client, member, guild);
     if(member.roles.cache.has(customId)) {

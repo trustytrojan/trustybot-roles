@@ -29,7 +29,7 @@ function readSingleRoles() {
   if(existsSync(sr_file) && readFileSync(sr_file).length > 0)
     for(const { channel, messages } of require(sr_file))
       single_roles.set(channel, new SingleRole(channel, messages));
-  return single_roles;
+  return (global.sr = single_roles);
 }
 
 /**

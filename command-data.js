@@ -1,5 +1,5 @@
-const { Client, ApplicationCommandOptionType, APIApplicationCommand } = require('discord.js');
-const { handleError } = require('./utils');
+const { ApplicationCommandOptionType, APIApplicationCommand, Guild } = require('discord.js');
+const { handleError, getGlobals } = require('./utils');
 const { Role, Boolean, Integer } = ApplicationCommandOptionType;
 
 const role_options = [
@@ -13,7 +13,7 @@ for(let i = 2; i <= 10; ++i) {
 }
 
 /** @type {APIApplicationCommand[]} */
-const global = [
+const global_cmds = [
   { name: 'ping', description: 'check ping' },
   { name: 'eval', description: 'only my owner can use this command!', options: [
     { name: 'depth', type: Integer, description: 'object depth' },
@@ -22,18 +22,33 @@ const global = [
 ];
 
 /** @type {APIApplicationCommand[]} */
-const guild = [
+const guild_cmds = [
   { name: 'button_roles', description: 'create buttons that give roles on click', options: role_options },
   { name: 'dropdown_roles', description: 'create a dropdown menu for roles', options: role_options }
 ];
 
-/**
- * @param {Client} client 
- */
-function setCommands(client) {
-  client.application.commands.set(global).catch(handleError);
-  for(const { commands } of client.guilds.cache.values())
-    commands.set(guild).catch(handleError);
+async function setCommands() {
+  await setGlobalCommands();
+  await setGuildCommands();
 }
 
-module.exports = setCommands;
+async function setGlobalCommands() {
+  const { client } = getGlobals();
+  await client.application.commands.set(global_cmds).catch(handleError);
+}
+
+async function setGuildCommands() {
+  const { client } = getGlobals();
+  for(const { commands } of client.guilds.cache.values())
+    await commands.set(guild_cmds).catch(handleError);
+}
+
+/** @param {Guild} guild */
+const setCommandsForGuild = ({ commands }) => commands.set(guild_cmds);
+
+module.exports = {
+  get setCommands() { return setCommands; },
+  get setGlobalCommands() { return setGlobalCommands; },
+  get setGuildCommands() { return setGuildCommands; },
+  get setCommandsForGuild() { return setCommandsForGuild; },
+};
