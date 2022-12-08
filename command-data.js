@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType, APIApplicationCommand, Guild } = require('discord.js');
 const { handleError, getGlobals } = require('./utils');
-const { Role, Boolean, Integer } = ApplicationCommandOptionType;
+const { Role, Boolean, Integer, String } = ApplicationCommandOptionType;
 
 const role_options = [
   { type: Boolean, name: 'single_role', description: `restrict members to only one role?`, required: true },
@@ -16,6 +16,7 @@ for(let i = 2; i <= 10; ++i) {
 const global_cmds = [
   { name: 'ping', description: 'check ping' },
   { name: 'eval', description: 'only my owner can use this command!', options: [
+    { name: 'expr', type: String, description: 'expression to evaluate' },
     { name: 'depth', type: Integer, description: 'object depth' },
     { name: 'show_hidden', type: Boolean, description: 'show hidden properties like getters, symbols, etc' }
   ] }

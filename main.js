@@ -30,8 +30,8 @@ client.on('interactionCreate', async (interaction) => {
   if(interaction.isChatInputCommand()) {
     try { switch(interaction.commandName) {
       case 'ping': await interaction.reply(`\`${client.ws.ping}ms\``); break;
-      case 'eval': _eval(interaction); break;
-      case 'button_roles': require('./button-roles')(interaction, single_roles); break;
+      case 'eval': await require('./eval-command')(interaction); break;
+      case 'button_roles': await require('./button-roles')(interaction, single_roles); break;
       case 'dropdown_roles': await interaction.replyEphemeral('work in progress!'); break;
     } } catch(err) { handleError(err); }
   }
@@ -52,6 +52,9 @@ function kill() {
   writeSingleRoles(single_roles);
   process.exit();
 }
+
+// for eval
+global.kill = kill;
 
 // token.json should only contain a string (not an object)
 client.login(require('./token.json'));
