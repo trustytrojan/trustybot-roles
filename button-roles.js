@@ -15,9 +15,9 @@ module.exports = async function(interaction, single_roles) {
   const myPerms = guild.members.me.permissions;
 
   // check permissions
-  if(!myPerms.has('ManageRoles'))
+  if(!myPerms.has('ManageRoles', true))
     { await interaction.replyEphemeral('i need `Manage Roles` perms to create button roles'); return; }
-  if(!member.permissions.has('ManageRoles'))
+  if(!member.permissions.has('ManageRoles', true))
     { await interaction.replyEphemeral('you need `Manage Roles` perms to create button roles'); return; }
 
   // collect roles and create button objects
