@@ -20,7 +20,6 @@ global.client = client;
 
 client.on('ready', async () => {
   await initGlobals(client);
-  await setCommands();
   clearOwnerDM();
   sendOwnerButtons();
   console.log(`Logged in as ${client.user.tag}!`);
