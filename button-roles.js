@@ -33,23 +33,23 @@ module.exports = async function(interaction, single_roles) {
 
   // create modal to ask for message content and optional button emojis
   const modal_components = [{ type: ActionRow, components: [{ type: TextInput, customId: 'content', label: 'message content', style: Paragraph }] }];
-  for(let i = 0; i < buttons.length; ++i) {
-    modal_components.push({ type: ActionRow, components: [{ type: TextInput, customId: `btn${i}`, label: `emoji for @${buttons[i].label}`, style: Short, required: false }] });
-  }
+  // for(let i = 0; i < buttons.length; ++i) {
+  //   modal_components.push({ type: ActionRow, components: [{ type: TextInput, customId: `btn${i}`, label: `emoji for @${buttons[i].label}`, style: Short, required: false }] });
+  // }
   const customId = randomUUID();
   await interaction.showModal({ customId, title: 'Add message & emojis', components: modal_components });
   let modal_int;
   try { modal_int = await interaction.awaitModalSubmit({ filter: (m) => m.customId === customId, time: 120_000 }); }
   catch(err) { await interaction.followUp(`${member} you took too long to submit the modal`); return; }
   const content = modal_int.fields.getTextInputValue('content');
-  for(let i = 0; i < buttons.length; ++i) {
-    let b;
-    try { b = modal_int.fields.getTextInputValue(`btn${i}`); }
-    catch(err) { continue; }
-    if(b?.length === 0) continue;
-    if(b === 'none') continue;
-    buttons[i].emoji = b;
-  }
+  // for(let i = 0; i < buttons.length; ++i) {
+  //   let b;
+  //   try { b = modal_int.fields.getTextInputValue(`btn${i}`); }
+  //   catch(err) { continue; }
+  //   if(b?.length === 0) continue;
+  //   if(b === 'none') continue;
+  //   buttons[i].emoji = b;
+  // }
 
   // construct final message with buttons          
   const final_message_components = [];

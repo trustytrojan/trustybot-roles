@@ -14,12 +14,7 @@ for(let i = 2; i <= 10; ++i) {
 
 /** @type {APIApplicationCommand[]} */
 const global_cmds = [
-  { name: 'ping', description: 'check ping' },
-  { name: 'eval', description: 'only my owner can use this command!', options: [
-    { name: 'expr', type: String, description: 'expression to evaluate', required: true },
-    { name: 'depth', type: Integer, description: 'object depth' },
-    { name: 'show_hidden', type: Boolean, description: 'show hidden properties like getters, symbols, etc' }
-  ] }
+  { name: 'ping', description: 'check ping' }
 ];
 
 /** @type {APIApplicationCommand[]} */
