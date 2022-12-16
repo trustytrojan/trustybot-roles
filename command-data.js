@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType, APIApplicationCommand, Guild } = require('discord.js');
 const { handleError, getGlobals } = require('./utils');
-const { Role, Boolean, Integer, String } = ApplicationCommandOptionType;
+const { Role, Boolean } = ApplicationCommandOptionType;
 
 const role_options = [
   { type: Boolean, name: 'single_role', description: `restrict members to only one role?`, required: true },
