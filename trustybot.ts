@@ -1,6 +1,17 @@
-import { Client, ClientOptions, User, ComponentType, ButtonStyle, Message, APIMessage, MessagePayload, Collection } from 'discord.js';
-import { EventEmitter } from 'events';
-import { formatError } from './utils';
+import {
+  Client,
+  ClientOptions,
+  User,
+  ComponentType,
+  ButtonStyle,
+  Message,
+  ChatInputCommandInteraction,
+  ButtonInteraction
+} from 'discord.js';
+
+import InteractionEmitter from './InteractionEmitter';
+import { guild_commands, global_commands } from './command-data';
+import { format_error } from './utils';
 
 const { ActionRow, Button } = ComponentType;
 const { Danger, Primary } = ButtonStyle;
@@ -8,8 +19,8 @@ const { Danger, Primary } = ButtonStyle;
 const do_nothing = () => {};
 
 export default class trustybot extends Client {
-  readonly chat_input_interaction = new EventEmitter();
-  readonly button_interaction = new EventEmitter();
+  readonly chat_input = new InteractionEmitter<ChatInputCommandInteraction>();
+  readonly button = new InteractionEmitter<ButtonInteraction>();
   owner: User;
   private owner_buttons: Message;
   private readonly on_kill: () => any;
@@ -19,13 +30,6 @@ export default class trustybot extends Client {
 
     if(on_kill) this.on_kill = on_kill;
 
-    this.on('interactionCreate', (interaction) => {
-      if(interaction.isChatInputCommand())
-        this.chat_input_interaction.emit(interaction.commandName, interaction);
-      else if(interaction.isButton())
-        this.button_interaction.emit(interaction.customId, interaction);
-    });
-
     this.on('ready', async () => {
       console.log(`Logged in as ${this.user?.id}!`);
       await this.fetchOwner();
@@ -33,11 +37,24 @@ export default class trustybot extends Client {
       this.clearOwnerDM();
     });
 
+    this.on('interactionCreate', (interaction) => {
+      if(interaction.isChatInputCommand())
+        this.chat_input.emit(interaction.commandName, interaction);
+      else if(interaction.isButton())
+        this.button.emit(interaction.customId, interaction) ?? this.button.emit('*', interaction);
+    });
+
+    this.on('guildCreate', ({ commands }) => void commands.set(guild_commands));
+
     this.on('error', this.handleError);
 
     process.on('SIGINT', this.kill);
     process.on('SIGTERM', this.kill);
     process.on('uncaughtException', (err) => { this.handleError(err); this.kill(); });
+
+    this.button.on('kill', this.kill);
+    this.button.on('set_guild_commands', () => this.application?.commands.set(guild_commands));
+    this.button.on('set_global_commands', () => this.application?.commands.set(global_commands));
   }
 
   async fetchOwner(): Promise<User> {
@@ -52,7 +69,7 @@ export default class trustybot extends Client {
     const owner = this.owner ?? await this.fetchOwner();
     if(!this.owner) return;
     console.error(err);
-    this.owner.send(formatError(err)).catch(do_nothing);
+    this.owner.send(format_error(err)).catch(do_nothing);
   }
 
   async clearOwnerDM() {
