@@ -1,7 +1,7 @@
 import { Collection } from 'discord.js';
 
 export default class InteractionEmitter<InteractionType> {
-  private readonly events: Collection<string, ((interaction: InteractionType) => any)[]>;
+  private readonly events = new Collection<string, ((interaction: InteractionType) => any)[]>();
 
   on(event: string, listener: (interaction: InteractionType) => any) {
     this.events.ensure(event, () => [listener]).push(listener);

@@ -88,6 +88,7 @@ export default async function button_roles(
     const { id } = await modal_int.reply({ content, fetchReply: true, components: final_message_components });
     if(single_role) single_roles.ensure(channelId, () => new SingleRole(channelId)).messages.push(id);
   } catch(err) {
+    if(!(err instanceof Error)) return;
     if(err.message.includes('emoji'))
       reply_ephemeral(modal_int, 'invalid emoji(s) supplied!');
     else

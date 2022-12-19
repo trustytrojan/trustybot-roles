@@ -5,7 +5,7 @@ import { reply_ephemeral, something_went_wrong } from './utils';
 import button_roles from './button-roles';
 import token from './token.json';
 
-const single_roles = SingleRole.readFromFile();
+const single_roles = await SingleRole.readFromFile();
 
 const client = new trustybot({
   intents: [

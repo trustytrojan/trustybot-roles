@@ -21,9 +21,9 @@ const do_nothing = () => {};
 export default class trustybot extends Client {
   readonly chat_input = new InteractionEmitter<ChatInputCommandInteraction>();
   readonly button = new InteractionEmitter<ButtonInteraction>();
-  owner: User;
-  private owner_buttons: Message;
-  private readonly on_kill: () => any;
+  owner: User | null = null;
+  private owner_buttons: Message | null = null;
+  private readonly on_kill: (() => any) = do_nothing;
 
   constructor(o: ClientOptions, on_kill?: () => any) {
     super(o);
@@ -31,10 +31,10 @@ export default class trustybot extends Client {
     if(on_kill) this.on_kill = on_kill;
 
     this.on('ready', async () => {
-      console.log(`Logged in as ${this.user?.id}!`);
+      console.log(`Logged in as ${this.user?.tag}!`);
       await this.fetchOwner();
-      await this.sendOwnerButtons();
-      this.clearOwnerDM();
+      await this.clearOwnerDM();
+      this.sendOwnerButtons();
     });
 
     this.on('interactionCreate', (interaction) => {
@@ -48,11 +48,11 @@ export default class trustybot extends Client {
 
     this.on('error', this.handleError);
 
-    process.on('SIGINT', this.kill);
-    process.on('SIGTERM', this.kill);
+    process.on('SIGINT', this.kill.bind(this));
+    process.on('SIGTERM', this.kill.bind(this));
     process.on('uncaughtException', (err) => { this.handleError(err); this.kill(); });
 
-    this.button.on('kill', this.kill);
+    this.button.on('kill', this.kill.bind(this));
     this.button.on('set_guild_commands', () => this.application?.commands.set(guild_commands));
     this.button.on('set_global_commands', () => this.application?.commands.set(global_commands));
   }
@@ -100,8 +100,8 @@ export default class trustybot extends Client {
   }
 
   async kill() {
-    await this.owner_buttons?.delete();
-    await this.on_kill();
+    await this.owner_buttons?.delete().catch(do_nothing);
+    await this.on_kill()?.catch(do_nothing);
     this.destroy();
     process.exit();
   }

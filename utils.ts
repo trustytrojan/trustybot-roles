@@ -2,8 +2,6 @@ import { randomUUID } from 'crypto';
 import {
   APIActionRowComponent,
   APIModalActionRowComponent,
-  ButtonInteraction,
-  ChatInputCommandInteraction,
   ModalSubmitInteraction,
   TextInputStyle,
   ComponentType,
@@ -11,6 +9,7 @@ import {
   CommandInteraction,
   MessageComponentInteraction
 } from 'discord.js';
+import { readFileSync } from 'fs';
 
 const { ActionRow, TextInput } = ComponentType;
 
@@ -51,3 +50,5 @@ export async function send_modal_and_wait_for_submit(
   catch(err) { interaction.followUp(`${interaction.member} you took too long to submit the modal`); return; }
   return modal_int;
 }
+
+export const parse_json_from_file = (file: string) => JSON.parse(readFileSync(file).toString());
