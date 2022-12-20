@@ -46,7 +46,7 @@ export default class trustybot extends Client {
 
     this.on('guildCreate', ({ commands }) => void commands.set(guild_commands));
 
-    this.on('error', this.handleError);
+    this.on('error', this.handleError.bind(this));
 
     process.on('SIGINT', this.kill.bind(this));
     process.on('SIGTERM', this.kill.bind(this));
