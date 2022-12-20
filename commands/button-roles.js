@@ -10,7 +10,6 @@ import {
   format_error,
   modal_helper,
   modal_row,
-  reply_ephemeral,
 } from '../utils.js';
 
 import SingleRole from '../SingleRole.js';
@@ -24,8 +23,7 @@ const { Primary } = ButtonStyle;
  * @param {Collection<string, SingleRole>} single_roles 
  */
 export default async function button_roles(interaction, single_roles) {
-  const { guild, options, channelId } = interaction;
-  let { member } = interaction;
+  const { guild, options, channelId, member } = interaction;
 
   const myPerms = guild.members.me.permissions;
   const myRole = guild.members.me.roles.botRole;

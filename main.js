@@ -1,7 +1,6 @@
 import { ButtonInteraction } from 'discord.js';
 import trustybot from './trustybot.js';
 import SingleRole from './SingleRole.js';
-import { reply_ephemeral } from './utils.js';
 import button_roles from './commands/button-roles.js';
 import token from './token.json' assert { type: 'json' };
 
@@ -23,15 +22,14 @@ chat_input.on('ping', (interaction) => interaction.reply(`\`${client.ws.ping}ms\
 chat_input.on('button_roles', (interaction) => button_roles(interaction, single_roles));
 
 button.on('*', async (/** @type {ButtonInteraction} */ interaction) => {
-  const { message, customId, guild, channelId } = interaction;
-  let { member } = interaction;
+  const { message, customId, guild, member, channelId } = interaction;
 
   if(!guild) return;
 
   if((await guild.roles.fetch())?.has(customId)) {
     if(member.roles.cache.has(customId)) {
       await member.roles.remove(customId);
-      reply_ephemeral(interaction, `removed <@&${customId}>!`);
+      interaction.replyEphemeral(`removed <@&${customId}>!`);
     } else {
       let replaced;
       if(single_roles.get(channelId)?.messages.includes(message.id))
@@ -42,7 +40,7 @@ button.on('*', async (/** @type {ButtonInteraction} */ interaction) => {
           }
         }
       await member.roles.add(customId);
-      reply_ephemeral(interaction, replaced ?? `added <@&${customId}>!`);
+      interaction.replyEphemeral(replaced ?? `added <@&${customId}>!`);
     }
   }
 });

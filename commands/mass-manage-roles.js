@@ -6,8 +6,7 @@ import { reply_ephemeral, something_went_wrong } from '../utils.js';
  */
 export default async function mass_roles(interaction) {
 
-  const { guild, options } = interaction;
-  let { member } = interaction;
+  const { guild, member, options } = interaction;
 
   const action = options.getString('action', true);
   let a_past, a_proc, a_prop;
@@ -16,17 +15,9 @@ export default async function mass_roles(interaction) {
     case 'remove': ([a_past, a_proc, a_prop] = ['removed', 'removal', 'from']); break;
     default: something_went_wrong(interaction); return;
   }
-  
-  // type checks
-  if(!guild) return;
-  if(!member) { something_went_wrong(interaction); return; }
-  if(!(member instanceof GuildMember))
-    member = await guild.members.fetch(member.user.id);
-  const me = guild.members.me;
-  if(!me) { something_went_wrong(interaction); return; }
-  const myPerms = me.permissions;
-  const myRole = me.roles.botRole;
-  if(!myRole) { reply_ephemeral(interaction, `i don't have a dedicated role in this server!`); return; }
+
+  const myPerms = guild.members.me.permissions;
+  const myRole = guild.members.me.roles.botRole;
 
   // check permissions
   if(!myPerms.has('ManageRoles', true))
