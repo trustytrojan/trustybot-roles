@@ -1,17 +1,13 @@
 import {
   Client,
-  ClientOptions,
   User,
   ComponentType,
-  ButtonStyle,
-  Message,
-  ChatInputCommandInteraction,
-  ButtonInteraction
+  ButtonStyle
 } from 'discord.js';
 
-import InteractionEmitter from './InteractionEmitter';
 import { guild_commands, global_commands } from './command-data';
-import { format_error } from './utils';
+import { format_error, reply_ephemeral } from './utils';
+import EventEmitter from 'events';
 
 const { ActionRow, Button } = ComponentType;
 const { Danger, Primary } = ButtonStyle;
@@ -19,16 +15,13 @@ const { Danger, Primary } = ButtonStyle;
 const do_nothing = () => {};
 
 export default class trustybot extends Client {
-  readonly chat_input = new InteractionEmitter<ChatInputCommandInteraction>();
-  readonly button = new InteractionEmitter<ButtonInteraction>();
-  owner: User | null = null;
-  private owner_buttons: Message | null = null;
-  private readonly on_kill: (() => any) = do_nothing;
-
-  constructor(o: ClientOptions, on_kill?: () => any) {
+  constructor(o, on_kill) {
     super(o);
 
-    if(on_kill) this.on_kill = on_kill;
+    Object.defineProperty(this, 'chat_input', { value: new EventEmitter(), writable: false });
+    Object.defineProperty(this, 'button', { value: new EventEmitter(), writable: false });
+
+    if(on_kill) this.on_kill = on_kill ?? do_nothing;
 
     this.on('ready', async () => {
       console.log(`Logged in as ${this.user?.tag}!`);
@@ -41,7 +34,7 @@ export default class trustybot extends Client {
       if(interaction.isChatInputCommand())
         this.chat_input.emit(interaction.commandName, interaction);
       else if(interaction.isButton())
-        this.button.emit(interaction.customId, interaction) ?? this.button.emit('*', interaction);
+        this.button.emit(interaction.customId, interaction) || this.button.emit('*', interaction);
     });
 
     this.on('guildCreate', ({ commands }) => void commands.set(guild_commands));
@@ -53,21 +46,24 @@ export default class trustybot extends Client {
     process.on('uncaughtException', (err) => { this.handleError(err); this.kill(); });
 
     this.button.on('kill', this.kill.bind(this));
-    this.button.on('set_guild_commands', () => this.application?.commands.set(guild_commands));
-    this.button.on('set_global_commands', () => this.application?.commands.set(global_commands));
+    this.button.on('guildcmds', async (interaction) => {
+      await this.application?.commands.set(guild_commands);
+      reply_ephemeral(interaction, 'set guild commands!');
+    });
+    this.button.on('globalcmds', async (interaction) => {
+      await this.application?.commands.set(global_commands);
+      reply_ephemeral(interaction, 'set global commands!');
+    });
   }
 
-  async fetchOwner(): Promise<User> {
-    if(this.application?.owner instanceof User)
-      return this.application.owner;
-    const application = await this.application?.fetch();
-    if(!(application?.owner instanceof User)) throw new TypeError('owner could not be fetched!');
-    return (this.owner = application.owner);
+  async fetchOwner() {
+    const { owner } = await this.application.fetch();
+    if(!(owner instanceof User)) throw 'kill yourself';
+    return (this.owner = owner);
   }
 
-  async handleError(err: Error) {
+  async handleError(err) {
     const owner = this.owner ?? await this.fetchOwner();
-    if(!owner) return;
     console.error(err);
     owner.send(format_error(err)).catch(do_nothing);
   }
