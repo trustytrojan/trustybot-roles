@@ -8,9 +8,9 @@ import {
 
 import {
   format_error,
+  modal_helper,
   modal_row,
   reply_ephemeral,
-  send_modal_and_wait_for_submit,
 } from '../utils.js';
 
 import SingleRole from '../SingleRole.js';
@@ -32,9 +32,9 @@ export default async function button_roles(interaction, single_roles) {
 
   // check permissions
   if(!myPerms.has('ManageRoles', true))
-    { reply_ephemeral(interaction, 'i need `Manage Roles` perms to create button roles'); return; }
+    { interaction.replyEphemeral('i need `Manage Roles` perms to create button roles'); return; }
   if(!member.permissions.has('ManageRoles', true))
-    { reply_ephemeral(interaction, 'you need `Manage Roles` perms to create button roles'); return; }
+    { interaction.replyEphemeral('you need `Manage Roles` perms to create button roles'); return; }
   
   // collect roles and create button objects
   const buttons = [];
@@ -45,17 +45,17 @@ export default async function button_roles(interaction, single_roles) {
 
     // role position check
     if(role.comparePositionTo(myRole) > 0)
-      { reply_ephemeral(interaction, `my role is lower than ${role}! please move me above this role so i can give it to members!`); return; }
+      { interaction.replyEphemeral(`my role is lower than ${role}! please move me above this role so i can give it to members!`); return; }
     
     buttons.push({ type: Button, label: role.name, custom_id: role.id, style: Primary });
   }
 
   // whatever this is
-  const modal_int = await send_modal_and_wait_for_submit(interaction, 'Add message content', 120_000, [
+  const getTextInputValue = await modal_helper(interaction, 'Add message content', 120_000, [
     modal_row('content', 'message content', Paragraph, true)
   ]);
-  if(!modal_int) return;
-  const content = modal_int.fields.getTextInputValue('content');
+  if(!getTextInputValue) return; // util function replied for us, so just return
+  const content = getTextInputValue('content');
 
   // construct final message with buttons          
   const final_message_components = [];

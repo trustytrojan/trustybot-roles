@@ -1,8 +1,12 @@
+import { ButtonInteraction } from 'discord.js';
 import trustybot from './trustybot.js';
 import SingleRole from './SingleRole.js';
 import { reply_ephemeral } from './utils.js';
 import button_roles from './commands/button-roles.js';
 import token from './token.json' assert { type: 'json' };
+
+// run the prototype assignment for CommandInteraction.replyEphemeral()
+import './reply-ephemeral.js';
 
 const single_roles = await SingleRole.readFromFile();
 
@@ -18,7 +22,7 @@ const { chat_input, button } = client;
 chat_input.on('ping', (interaction) => interaction.reply(`\`${client.ws.ping}ms\``));
 chat_input.on('button_roles', (interaction) => button_roles(interaction, single_roles));
 
-button.on('*', async (interaction) => {
+button.on('*', async (/** @type {ButtonInteraction} */ interaction) => {
   const { message, customId, guild, channelId } = interaction;
   let { member } = interaction;
 

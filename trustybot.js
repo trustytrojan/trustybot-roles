@@ -2,19 +2,30 @@ import {
   Client,
   User,
   ComponentType,
-  ButtonStyle
+  ButtonStyle,
+  ButtonInteraction,
+  TextInputStyle,
+  IntegrationExpireBehavior
 } from 'discord.js';
 
 import { guild_commands, global_commands } from './command-data.js';
-import { format_error, reply_ephemeral } from './utils.js';
+import { format_error, modal_row, send_modal_and_wait_for_submit } from './utils.js';
 import EventEmitter from 'events';
+import { inspect } from 'util';
 
 const { ActionRow, Button } = ComponentType;
 const { Danger, Primary } = ButtonStyle;
+const { Paragraph } = TextInputStyle;
 
 const do_nothing = () => {};
 
 export default class trustybot extends Client {
+  /** @type {EventEmitter} */ chat_input;
+  /** @type {EventEmitter} */ button;
+  /** @type {() => any} */ on_kill;
+  /** @type {User} */ owner;
+  /** @type {Message} */ owner_buttons;
+
   constructor(o, on_kill) {
     super(o);
 
@@ -46,13 +57,37 @@ export default class trustybot extends Client {
     process.on('uncaughtException', (err) => { this.handleError(err); this.kill(); });
 
     this.button.on('kill', this.kill.bind(this));
-    this.button.on('guildcmds', async (interaction) => {
+
+    this.button.on('guildcmds', async (/** @type {ButtonInteraction} */ interaction) => {
       await this.application?.commands.set(guild_commands);
       reply_ephemeral(interaction, 'set guild commands!');
     });
-    this.button.on('globalcmds', async (interaction) => {
+
+    this.button.on('globalcmds', async (/** @type {ButtonInteraction} */ interaction) => {
       await this.application?.commands.set(global_commands);
       reply_ephemeral(interaction, 'set global commands!');
+    });
+    
+    this.button.on('eval', async (/** @type {ButtonInteraction} */ interaction) => {
+      const { user } = interaction;
+      if(user.id !== this.owner.id) { await interaction.reply('only my owner can use this command!'); return; }
+      const get_from_modal = await send_modal_and_wait_for_submit(interaction, 'eval', 60_000, [
+        modal_row('expr', 'expression', Paragraph, true)
+      ]);
+      if(!modal_int) return;
+      let code = get_from_modal('code');
+      if(code.includes('await')) code = `(async () => { ${code} })().catch(handleError)`;
+      let output;
+      try { output = inspect(await eval(code), { depth: 0, showHidden: true }); }
+      catch(err) { this.handleError(err); return; }
+      let x;
+      if(output.length <= 2000)
+        x = '```js\n'+output+'```';
+      else if(output.length > 2000 && output.length <= 4096)
+        x = { embeds: [{ description: '```js\n'+output+'```' }] };
+      else if(output.length > 4096)
+        x = { files: [{ attachment: Buffer.from(output), name: 'output.js'}] };
+      interaction.replyEphemeral(x);
     });
   }
 
@@ -62,7 +97,7 @@ export default class trustybot extends Client {
     return (this.owner = owner);
   }
 
-  async handleError(err) {
+  async handleError(/** @type {Error} */ err) {
     const owner = this.owner ?? await this.fetchOwner();
     console.error(err);
     owner.send(format_error(err)).catch(do_nothing);
