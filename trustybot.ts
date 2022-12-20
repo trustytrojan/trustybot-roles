@@ -67,9 +67,9 @@ export default class trustybot extends Client {
 
   async handleError(err: Error) {
     const owner = this.owner ?? await this.fetchOwner();
-    if(!this.owner) return;
+    if(!owner) return;
     console.error(err);
-    this.owner.send(format_error(err)).catch(do_nothing);
+    owner.send(format_error(err)).catch(do_nothing);
   }
 
   async clearOwnerDM() {
@@ -94,6 +94,7 @@ export default class trustybot extends Client {
           { type: Button, label: 'kill bot process', custom_id: 'kill', style: Danger },
           { type: Button, label: 'set guild commands', custom_id: 'guildcmds', style: Primary },
           { type: Button, label: 'set global commands', custom_id: 'globalcmds', style: Primary },
+          { type: Button, label: 'eval', custom_id: 'eval', style: Primary }
         ] }
       ]
     });

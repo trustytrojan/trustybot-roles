@@ -16,9 +16,9 @@ import {
   reply_ephemeral,
   send_modal_and_wait_for_submit,
   something_went_wrong
-} from './utils';
+} from '../utils';
 
-import SingleRole from './SingleRole';
+import SingleRole from '../SingleRole';
 
 const { ActionRow, Button } = ComponentType;
 const { Paragraph } = TextInputStyle;

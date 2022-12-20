@@ -1,9 +1,10 @@
 import {
   ApplicationCommandOptionType,
   ApplicationCommandOption,
+  ChatInputApplicationCommandData,
 } from 'discord.js';
 
-const { Role, Boolean } = ApplicationCommandOptionType;
+const { Role, Boolean, String } = ApplicationCommandOptionType;
 
 const sr_option: ApplicationCommandOption = {
   type: Boolean,
@@ -12,27 +13,30 @@ const sr_option: ApplicationCommandOption = {
   required: true
 };
 
-const roles_10: ApplicationCommandOption[] = [
-  {
-    type: Role,
-    name: 'role_1',
-    description: 'role 1 (required)',
-    required: true
+function add_roles_to_options(role_arr: ApplicationCommandOption[], start: number, end: number) {
+  for(let i = start; i <= end; ++i) {
+    role_arr.push({ type: Role, name: `role_${i}`, description: `role ${i}` });
   }
-];
-
-// support up to 10 button roles per message
-for(let i = 2; i <= 10; ++i) {
-  roles_10.push({ type: Role, name: `role_${i}`, description: `role ${i}` });
 }
 
-export const global_commands = [
+const roles_10: ApplicationCommandOption[] = [
+  { type: Role, name: 'role_1', description: 'role 1 (required)', required: true }
+];
+add_roles_to_options(roles_10, 2, 10);
+
+const roles_25 = [...roles_10];
+add_roles_to_options(roles_25, 11, 25);
+
+export const global_commands: ChatInputApplicationCommandData[] = [
   { name: 'ping', description: 'check ping' }
 ];
 
-export const guild_commands = [
+export const guild_commands: ChatInputApplicationCommandData[] = [
   { name: 'button_roles', description: '(manage roles required) create buttons that give roles on click', options: [sr_option, ...roles_10] },
   { name: 'dropdown_roles', description: '(manage roles required) create a dropdown menu for roles', options: [sr_option, ...roles_10] },
-  { name: 'add_role_to_all', description: '(manage roles required) add roles to all members', options: roles_10 },
-  { name: 'remove_role_from_all', description: '(manage roles required) remove roles from members', options: roles_10 }
+  { name: 'mass_manage_roles', description: '(manage roles required) add/remove roles to/from all members', options: [
+    { name: 'action', type: String, description: 'do you want to add or remove roles from all members?', choices: [
+      { name: 'add', value: 'add' }, { name: 'remove', value: 'remove' }
+    ] }
+  ] },
 ];

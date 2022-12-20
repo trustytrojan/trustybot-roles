@@ -9,8 +9,7 @@ export default class InteractionEmitter<InteractionType> {
 
   emit(event: string, interaction: InteractionType): boolean {
     const listeners = this.events.get(event);
-    if(!listeners) throw new Error('event does not exist!');
-    if(listeners.length === 0)
+    if(!listeners || listeners?.length === 0)
       return false;
     for(const listener of listeners)
       listener(interaction);

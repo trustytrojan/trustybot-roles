@@ -1,4 +1,6 @@
 import { randomUUID } from 'crypto';
+import { readFileSync } from 'fs';
+
 import {
   APIActionRowComponent,
   APIModalActionRowComponent,
@@ -7,13 +9,16 @@ import {
   ComponentType,
   JSONEncodable,
   CommandInteraction,
-  MessageComponentInteraction
+  MessageComponentInteraction,
+  BaseInteraction,
+  PermissionsBitField,
+  Role
 } from 'discord.js';
-import { readFileSync } from 'fs';
+
 
 const { ActionRow, TextInput } = ComponentType;
 
-export const format_error = (err: Error) => `**this is an error**\`\`\`js\n${err.stack ?? err}\`\`\``;
+export const format_error = (err: Error) => `\`\`\`js\n${err.stack ?? err}\`\`\``;
 
 type RepliableInteraction = CommandInteraction | MessageComponentInteraction | ModalSubmitInteraction;
 
