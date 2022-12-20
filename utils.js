@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import './reply-ephemeral';
+import './reply-ephemeral.js';
 
 import {
   CommandInteraction,
