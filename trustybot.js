@@ -9,7 +9,7 @@ import {
 } from 'discord.js';
 
 import { guild_commands, global_commands } from './command-data.js';
-import { format_error, modal_row, send_modal_and_wait_for_submit } from './utils.js';
+import { format_error, modal_row, modal_helper } from './utils.js';
 import EventEmitter from 'events';
 import { inspect } from 'util';
 
@@ -71,11 +71,11 @@ export default class trustybot extends Client {
     this.button.on('eval', async (/** @type {ButtonInteraction} */ interaction) => {
       const { user } = interaction;
       if(user.id !== this.owner.id) { await interaction.reply('only my owner can use this command!'); return; }
-      const get_from_modal = await send_modal_and_wait_for_submit(interaction, 'eval', 60_000, [
+      const fields = await modal_helper(interaction, 'eval', 60_000, [
         modal_row('expr', 'expression', Paragraph, true)
       ]);
-      if(!modal_int) return;
-      let code = get_from_modal('code');
+      if(!fields) return;
+      let [code] = fields;
       if(code.includes('await')) code = `(async () => { ${code} })().catch(handleError)`;
       let output;
       try { output = inspect(await eval(code), { depth: 0, showHidden: true }); }

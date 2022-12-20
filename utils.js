@@ -2,14 +2,11 @@ import { randomUUID } from 'crypto';
 import { readFileSync } from 'fs';
 
 import {
-  ComponentType,
   CommandInteraction,
-  TextInputStyle,
-  APIActionRowComponent,
-  APIModalActionRowComponent
+  TextInputStyle
 } from 'discord.js';
 
-const { ActionRow, TextInput } = ComponentType;
+const { APIActionRowComponent, APIModalActionRowComponent } = require('discord.js');
 
 /**
  * @param {Error} err 
@@ -30,8 +27,6 @@ export const something_went_wrong = (interaction) =>
  * @returns {APIActionRowComponent<APIModalActionRowComponent>}
  */
 export const modal_row = (custom_id, label, style, required) => ({ components: [{ custom_id, label, style, required }] });
-
-// [{ type: TextInput, custom_id, label, style, required }]
 
 /**
  * @param {CommandInteraction} interaction 

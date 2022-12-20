@@ -51,11 +51,11 @@ export default async function button_roles(interaction, single_roles) {
   }
 
   // whatever this is
-  const getTextInputValue = await modal_helper(interaction, 'Add message content', 120_000, [
+  const fields = await modal_helper(interaction, 'Add message content', 120_000, [
     modal_row('content', 'message content', Paragraph, true)
   ]);
-  if(!getTextInputValue) return; // util function replied for us, so just return
-  const content = getTextInputValue('content');
+  if(!fields) return; // util function replied for us, so just return
+  const [content] = fields;
 
   // construct final message with buttons          
   const final_message_components = [];
