@@ -5,7 +5,6 @@ import {
   ButtonStyle,
   ButtonInteraction,
   TextInputStyle,
-  IntegrationExpireBehavior
 } from 'discord.js';
 
 import { guild_commands, global_commands } from './command-data.js';
@@ -98,8 +97,8 @@ export default class trustybot extends Client {
   }
 
   async handleError(/** @type {Error} */ err) {
-    const owner = this.owner ?? await this.fetchOwner();
     console.error(err);
+    const owner = this.owner ?? await this.fetchOwner();
     owner.send(format_error(err)).catch(do_nothing);
   }
 

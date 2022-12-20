@@ -3,10 +3,13 @@ import { readFileSync } from 'fs';
 
 import {
   CommandInteraction,
-  TextInputStyle
+  TextInputStyle,
+  ComponentType
 } from 'discord.js';
 
-const { APIActionRowComponent, APIModalActionRowComponent } = require('discord.js');
+const { ActionRow, TextInput } = ComponentType;
+
+//const { APIActionRowComponent, APIModalActionRowComponent } = require('discord.js');
 
 /**
  * @param {Error} err 
@@ -26,7 +29,8 @@ export const something_went_wrong = (interaction) =>
  * @param {boolean?} required 
  * @returns {APIActionRowComponent<APIModalActionRowComponent>}
  */
-export const modal_row = (custom_id, label, style, required) => ({ components: [{ custom_id, label, style, required }] });
+export const modal_row = (custom_id, label, style, required) =>
+  ({ type: ActionRow, components: [{ type: TextInput, custom_id, label, style, required }] });
 
 /**
  * @param {CommandInteraction} interaction 
@@ -52,4 +56,4 @@ export async function modal_helper(interaction, title, time, rows) {
 /**
  * @param {string} file 
  */
-export const parse_json_from_file = (file) => JSON.parse(readFileSync(file).toString());
+export const json_from_file = async (file) => (await import(file, { assert: { type: 'json' } })).default;
