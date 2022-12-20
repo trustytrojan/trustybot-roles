@@ -10,9 +10,6 @@ import {
   JSONEncodable,
   CommandInteraction,
   MessageComponentInteraction,
-  BaseInteraction,
-  PermissionsBitField,
-  Role
 } from 'discord.js';
 
 

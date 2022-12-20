@@ -11,18 +11,19 @@ import {
   modal_row,
   reply_ephemeral,
   send_modal_and_wait_for_submit,
-} from '../utils';
+} from '../utils.js';
 
-import SingleRole from '../SingleRole';
+import SingleRole from '../SingleRole.js';
 
 const { ActionRow, Button } = ComponentType;
 const { Paragraph } = TextInputStyle;
 const { Primary } = ButtonStyle;
 
+/**
+ * @param {ChatInputCommandInteraction} interaction 
+ * @param {Collection<string, SingleRole>} single_roles 
+ */
 export default async function button_roles(interaction, single_roles) {
-  if(!(interaction instanceof ChatInputCommandInteraction)) return;
-  if(!(single_roles instanceof Collection)) return;
-
   const { guild, options, channelId } = interaction;
   let { member } = interaction;
 

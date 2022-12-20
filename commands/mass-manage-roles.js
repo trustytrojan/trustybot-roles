@@ -1,9 +1,10 @@
 import { ChatInputCommandInteraction, GuildMember, Role } from 'discord.js';
-import { reply_ephemeral, something_went_wrong } from '../utils';
+import { reply_ephemeral, something_went_wrong } from '../utils.js';
 
-export default async function mass_roles(
-  interaction: ChatInputCommandInteraction
-) {
+/**
+ * @param {ChatInputCommandInteraction} interaction 
+ */
+export default async function mass_roles(interaction) {
 
   const { guild, options } = interaction;
   let { member } = interaction;

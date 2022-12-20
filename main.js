@@ -1,8 +1,8 @@
-import trustybot from './trustybot';
-import SingleRole from './SingleRole';
-import { reply_ephemeral } from './utils';
-import button_roles from './commands/button-roles';
-import token from './token.json';
+import trustybot from './trustybot.js';
+import SingleRole from './SingleRole.js';
+import { reply_ephemeral } from './utils.js';
+import button_roles from './commands/button-roles.js';
+import token from './token.json' assert { type: 'json' };
 
 const single_roles = await SingleRole.readFromFile();
 

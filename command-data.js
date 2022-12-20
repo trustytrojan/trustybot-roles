@@ -1,6 +1,4 @@
-import {
-  ApplicationCommandOptionType,
-} from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 
 const { Role, Boolean, String } = ApplicationCommandOptionType;
 

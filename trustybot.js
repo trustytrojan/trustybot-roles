@@ -5,8 +5,8 @@ import {
   ButtonStyle
 } from 'discord.js';
 
-import { guild_commands, global_commands } from './command-data';
-import { format_error, reply_ephemeral } from './utils';
+import { guild_commands, global_commands } from './command-data.js';
+import { format_error, reply_ephemeral } from './utils.js';
 import EventEmitter from 'events';
 
 const { ActionRow, Button } = ComponentType;
