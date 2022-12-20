@@ -29,9 +29,13 @@ export const guild_commands = [
   { name: 'button_roles', description: '(manage roles required) create buttons that give roles on click', options: [sr_option, ...roles_10] },
   { name: 'dropdown_roles', description: '(manage roles required) create a dropdown menu for roles', options: [sr_option, ...roles_10] },
   { name: 'mass_manage_roles', description: '(manage roles required) add/remove roles to/from all members', options: [
-    { name: 'action', type: String, description: 'do you want to add or remove roles from all members?', choices: [
-      { name: 'add', value: 'add' }, { name: 'remove', value: 'remove' }
-    ] },
+    {
+      name: 'action',
+      type: String,
+      description: 'do you want to add or remove roles from all members?',
+      choices: [{ name: 'add', value: 'add' }, { name: 'remove', value: 'remove' }],
+      required: true
+    },
     ...roles_24
   ] },
 ];
