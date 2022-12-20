@@ -1,12 +1,11 @@
-import { ChatInputCommandInteraction, Role } from 'discord.js';
-import { reply_ephemeral, something_went_wrong } from '../utils.js';
+import { ChatInputCommandInteraction } from 'discord.js';
+import { something_went_wrong } from '../utils.js';
 import '../reply-ephemeral.js';
 
 /**
  * @param {ChatInputCommandInteraction} interaction 
  */
-export default async function mass_roles(interaction) {
-
+export default async function mass_manage_roles(interaction) {
   const { guild, member, options } = interaction;
 
   const action = options.getString('action', true);
@@ -22,24 +21,17 @@ export default async function mass_roles(interaction) {
 
   // check permissions
   if(!myPerms.has('ManageRoles', true))
-    { reply_ephemeral(interaction, 'i need `Manage Roles` perms to create button roles'); return; }
+    { interaction.replyEphemeral('i need `Manage Roles` perms'); return; }
   if(!member.permissions.has('ManageRoles', true))
-    { reply_ephemeral(interaction, 'you need `Manage Roles` perms to create button roles'); return; }
+    { interaction.replyEphemeral('you need `Manage Roles` perms'); return; }
 
   // result embed description
   let description;
 
-  for(let { role } of options.data) {
-    // type checks
-    if(!role) { something_went_wrong(interaction); return; }
-    if(!(role instanceof Role)) {
-      role = await guild.roles.fetch(role.id);
-      if(!role) { reply_ephemeral(interaction, `one of the roles you gave me does not exist!`); return; }
-    }
-
+  for(const { role } of options.data) {
     // role position check
     if(role.comparePositionTo(myRole) > 0)
-      { reply_ephemeral(interaction, `my role is lower than ${role}! please move me above this role so i can give it to members!`); return; }
+      { interaction.replyEphemeral(`my role is lower than ${role}! please move me above this role!`); return; }
 
     // add role to all members
     let n = guild.members.cache.size;

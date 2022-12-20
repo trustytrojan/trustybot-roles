@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { readFileSync } from 'fs';
+import './reply-ephemeral';
 
 import {
   CommandInteraction,
