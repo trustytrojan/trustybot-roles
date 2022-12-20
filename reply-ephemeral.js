@@ -1,6 +1,6 @@
-import { CommandInteraction } from 'discord.js';
+import { BaseInteraction } from 'discord.js';
 
-CommandInteraction.prototype.replyEphemeral = function(x) {
+BaseInteraction.prototype.replyEphemeral = function(x) {
   if(typeof x === 'string')
     this.reply({ content: x, ephemeral: true });
   else if(typeof x === 'object') {

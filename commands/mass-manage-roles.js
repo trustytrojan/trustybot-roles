@@ -1,5 +1,6 @@
-import { ChatInputCommandInteraction, GuildMember, Role } from 'discord.js';
+import { ChatInputCommandInteraction, Role } from 'discord.js';
 import { reply_ephemeral, something_went_wrong } from '../utils.js';
+import '../reply-ephemeral.js';
 
 /**
  * @param {ChatInputCommandInteraction} interaction 

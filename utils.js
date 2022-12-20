@@ -4,7 +4,8 @@ import { readFileSync } from 'fs';
 import {
   CommandInteraction,
   TextInputStyle,
-  ComponentType
+  ComponentType,
+  ModalSubmitInteraction
 } from 'discord.js';
 
 const { ActionRow, TextInput } = ComponentType;
@@ -44,14 +45,11 @@ export async function modal_helper(interaction, title, time, rows) {
   let modal_int;
   try { modal_int = await interaction.awaitModalSubmit({ filter: (m) => m.customId === customId, time }); }
   catch(err) { interaction.followUp(`${interaction.member} you took too long to submit the modal`); return; }
-  console.log(modal_int.fields.fields);
-  const values = [];
-  for(const row_id of rows.map((v) => v.components[0].custom_id)) {
-    values.push(modal_int.fields.getTextInputValue(row_id));
-  }
-  console.log(values);
-  return values;
+  return modal_int;
 }
+
+/** @param {ModalSubmitInteraction} modal_int */
+export const extract_text = (modal_int) => modal_int.fields.fields.map((v) => v.value);
 
 /**
  * @param {string} file 

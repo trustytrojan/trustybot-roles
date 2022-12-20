@@ -8,9 +8,10 @@ import {
 } from 'discord.js';
 
 import { guild_commands, global_commands } from './command-data.js';
-import { format_error, modal_row, modal_helper } from './utils.js';
+import { format_error, modal_row, modal_helper, extract_text } from './utils.js';
 import EventEmitter from 'events';
 import { inspect } from 'util';
+import './reply-ephemeral.js';
 
 const { ActionRow, Button } = ComponentType;
 const { Danger, Primary } = ButtonStyle;
@@ -59,22 +60,22 @@ export default class trustybot extends Client {
 
     this.button.on('guildcmds', async (/** @type {ButtonInteraction} */ interaction) => {
       await this.application?.commands.set(guild_commands);
-      reply_ephemeral(interaction, 'set guild commands!');
+      interaction.replyEphemeral('set guild commands!');
     });
 
     this.button.on('globalcmds', async (/** @type {ButtonInteraction} */ interaction) => {
       await this.application?.commands.set(global_commands);
-      reply_ephemeral(interaction, 'set global commands!');
+      interaction.replyEphemeral('set global commands!');
     });
     
     this.button.on('eval', async (/** @type {ButtonInteraction} */ interaction) => {
       const { user } = interaction;
       if(user.id !== this.owner.id) { await interaction.reply('only my owner can use this command!'); return; }
-      const fields = await modal_helper(interaction, 'eval', 60_000, [
+      const modal_int = await modal_helper(interaction, 'eval', 60_000, [
         modal_row('expr', 'expression', Paragraph, true)
       ]);
-      if(!fields) return;
-      let [code] = fields;
+      if(!modal_int) return;
+      let [code] = extract_text(modal_int);
       if(code.includes('await')) code = `(async () => { ${code} })().catch(handleError)`;
       let output;
       try { output = inspect(await eval(code), { depth: 0, showHidden: true }); }
@@ -86,7 +87,7 @@ export default class trustybot extends Client {
         x = { embeds: [{ description: '```js\n'+output+'```' }] };
       else if(output.length > 4096)
         x = { files: [{ attachment: Buffer.from(output), name: 'output.js'}] };
-      interaction.replyEphemeral(x);
+      modal_int.replyEphemeral(x);
     });
   }
 

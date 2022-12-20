@@ -1,5 +1,6 @@
 import { ButtonInteraction, Collection } from 'discord.js';
 import SingleRole from './SingleRole.js';
+import './reply-ephemeral.js';
 
 export default async function any_button_interaction(
   /** @type {ButtonInteraction} */ interaction,

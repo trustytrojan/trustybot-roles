@@ -7,12 +7,14 @@ import {
 } from 'discord.js';
 
 import {
+  extract_text,
   format_error,
   modal_helper,
   modal_row,
 } from '../utils.js';
 
 import SingleRole from '../SingleRole.js';
+import '../reply-ephemeral.js';
 
 const { ActionRow, Button } = ComponentType;
 const { Paragraph } = TextInputStyle;
@@ -49,11 +51,11 @@ export default async function button_roles(interaction, single_roles) {
   }
 
   // whatever this is
-  const fields = await modal_helper(interaction, 'Add message content', 120_000, [
+  const modal_int = await modal_helper(interaction, 'Add message content', 120_000, [
     modal_row('content', 'message content', Paragraph, true)
   ]);
-  if(!fields) return; // util function replied for us, so just return
-  const [content] = fields;
+  if(!modal_int) return; // util function replied for us, so just return
+  const [content] = extract_text(modal_int);
 
   // construct final message with buttons          
   const final_message_components = [];

@@ -4,9 +4,6 @@ import button_roles from './commands/button-roles.js';
 import token from './token.json' assert { type: 'json' };
 import any_button_interaction from './any-button-interaction.js';
 
-// run the prototype assignment for CommandInteraction.replyEphemeral()
-import './reply-ephemeral.js';
-
 const single_roles = await SingleRole.readFromFile();
 
 const client = new trustybot({
