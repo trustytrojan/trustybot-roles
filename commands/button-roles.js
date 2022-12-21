@@ -13,7 +13,6 @@ import {
   modal_row,
 } from '../utils.js';
 
-import SingleRole from '../SingleRole.js';
 import '../reply-ephemeral.js';
 
 const { ActionRow, Button } = ComponentType;
@@ -22,9 +21,8 @@ const { Primary } = ButtonStyle;
 
 /**
  * @param {ChatInputCommandInteraction} interaction 
- * @param {Collection<string, SingleRole>} single_roles 
  */
-export default async function button_roles(interaction, single_roles) {
+export default async function button_roles(interaction) {
   const { guild, options, channelId, member } = interaction;
 
   const myPerms = guild.members.me.permissions;

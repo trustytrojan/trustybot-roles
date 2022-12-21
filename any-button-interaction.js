@@ -1,13 +1,19 @@
 import {
-  ButtonInteraction,
   GuildMember
 } from 'discord.js';
 
 import './reply-ephemeral.js';
 
-export default async function any_button_interaction(
-  /** @type {ButtonInteraction} */ interaction
-) {
+/**
+ * Typing for VSCode
+ * @typedef {import('discord.js').ButtonInteraction} ButtonInteraction
+ */
+
+/**
+ * @param {ButtonInteraction} interaction 
+ * @returns 
+ */
+export default async function any_button_interaction(interaction) {
   const { message, customId, guild } = interaction;
   if(!guild) return;
 
