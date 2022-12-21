@@ -57,3 +57,5 @@ export const extract_text = (modal_int) => modal_int.fields.fields.map((v) => v.
  * @param {string} file 
  */
 export const json_from_file = async (file) => (await import(file, { assert: { type: 'json' } })).default;
+
+export const single_role_identifier = '\u2800';

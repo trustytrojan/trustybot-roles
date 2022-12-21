@@ -10,6 +10,7 @@ import {
   format_error,
   modal_helper,
   modal_row,
+  single_role_identifier,
 } from '../utils.js';
 
 import '../prototype.js';
@@ -64,7 +65,7 @@ export default async function create_button_roles(interaction) {
 
   // this is how the bot will identify single_role messages
   if(single_role) {
-    content = `${content}\u200a`; // https://www.invisiblecharacter.org/
+    content = `${content} ${single_role_identifier}`; // https://www.invisiblecharacter.org/
   }
 
   // construct final message with buttons          
