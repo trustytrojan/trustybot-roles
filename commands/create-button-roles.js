@@ -1,6 +1,5 @@
 import {
   ChatInputCommandInteraction,
-  Collection,
   ComponentType,
   TextInputStyle,
   ButtonStyle,
@@ -23,7 +22,7 @@ const { Primary } = ButtonStyle;
  * @param {ChatInputCommandInteraction} interaction 
  */
 export default async function create_button_roles(interaction) {
-  const { guild, options, channelId, member } = interaction;
+  const { guild, options, member } = interaction;
 
   const myPerms = guild.members.me.permissions;
   const myRole = guild.members.me.roles.botRole;
@@ -38,14 +37,22 @@ export default async function create_button_roles(interaction) {
   const buttons = [];
   let single_role = false;
   for(let { name, role, value } of options.data) {
-    if(name === 'single_role')
-      { single_role = value; continue; }
+    if(name === 'single_role') {
+      single_role = value;
+    }
 
-    // role position check
-    if(role.comparePositionTo(myRole) > 0)
-      { interaction.replyEphemeral(`my role is lower than ${role}! please move me above this role so i can give it to members!`); return; }
-    
-    buttons.push({ type: Button, label: role.name, custom_id: role.id, style: Primary });
+    else if(name.startsWith('role_')) {
+      if(role.comparePositionTo(myRole) > 0) {
+        interaction.replyEphemeral(`my role is lower than ${role}! please move me above this role so i can give it to members!`);
+        return;
+      }
+      buttons.push({ type: Button, label: role.name, custom_id: role.id, style: Primary });
+    }
+
+    else if(name.startsWith('emoji_')) {
+      const i = Number.parseInt(name.substring(6))-1;
+      buttons[i].emoji = value;
+    }
   }
 
   // whatever this is
@@ -56,8 +63,9 @@ export default async function create_button_roles(interaction) {
   let [content] = extract_text(modal_int);
 
   // this is how the bot will identify single_role messages
-  if(single_role)
-    content = `${content} ||single_role||`;
+  if(single_role) {
+    content = `${content}\u200a`; // https://www.invisiblecharacter.org/
+  }
 
   // construct final message with buttons          
   const final_message_components = [];

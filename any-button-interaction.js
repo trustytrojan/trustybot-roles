@@ -27,7 +27,7 @@ export default async function any_button_interaction(interaction) {
       interaction.replyEphemeral(`removed <@&${customId}>!`);
     } else {
       let replaced;
-      if(message.content.includes('||single_role||'))
+      if(message.content.includes('\u200a')) // https://www.invisiblecharacter.org/
         for(const { customId: role } of message.components[0].components) {
           if(member.roles.resolve(role)) {
             await member.roles.remove(role);

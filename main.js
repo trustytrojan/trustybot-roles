@@ -21,9 +21,9 @@ const client = new trustybot(
 const { chat_input, button } = client;
 
 chat_input.on('view_roles', (i) => view_roles(i));
-chat_input.on('create_button_roles', (i) => create_button_roles(i, single_roles));
+chat_input.on('create_button_roles', (i) => create_button_roles(i));
 chat_input.on('mass_manage_roles', (i) => mass_manage_roles(i));
 
-button.on('*', (i) => any_button_interaction(i, single_roles));
+button.on('*', (i) => any_button_interaction(i));
 
 client.login(token);
