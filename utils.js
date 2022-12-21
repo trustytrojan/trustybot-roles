@@ -10,7 +10,9 @@ import {
 
 const { ActionRow, TextInput } = ComponentType;
 
-//const { APIActionRowComponent, APIModalActionRowComponent } = require('discord.js');
+/**
+ * @typedef {import('discord.js').APIActionRowComponent<import('discord.js').APIModalActionRowComponent>} ModalRow
+ */
 
 /**
  * @param {Error} err 
@@ -28,7 +30,7 @@ export const something_went_wrong = (interaction) =>
  * @param {string} label 
  * @param {TextInputStyle} style 
  * @param {boolean?} required 
- * @returns {APIActionRowComponent<APIModalActionRowComponent>}
+ * @returns {ModalRow}
  */
 export const modal_row = (custom_id, label, style, required) =>
   ({ type: ActionRow, components: [{ type: TextInput, custom_id, label, style, required }] });
@@ -37,7 +39,7 @@ export const modal_row = (custom_id, label, style, required) =>
  * @param {CommandInteraction} interaction 
  * @param {string} title 
  * @param {number} time 
- * @param {APIActionRowComponent<APIModalActionRowComponent>[]} rows 
+ * @param {ModalRow[]} rows 
  */
 export async function modal_helper(interaction, title, time, rows) {
   const customId = randomUUID();

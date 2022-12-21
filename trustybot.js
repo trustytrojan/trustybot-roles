@@ -54,16 +54,16 @@ export default class trustybot extends Client {
 
     process.on('SIGINT', this.kill.bind(this));
     process.on('SIGTERM', this.kill.bind(this));
-    process.on('uncaughtException', (err) => { this.handleError(err); this.kill(); });
+    process.on('uncaughtException', (err) => { this.handleError(err); });
 
     this.button.on('kill', this.kill.bind(this));
 
-    this.button.on('guildcmds', async (/** @type {ButtonInteraction} */ interaction) => {
+    this.button.on('guildcmds', async (interaction) => {
       await this.application?.commands.set(guild_commands);
       interaction.replyEphemeral('set guild commands!');
     });
 
-    this.button.on('globalcmds', async (/** @type {ButtonInteraction} */ interaction) => {
+    this.button.on('globalcmds', async (interaction) => {
       await this.application?.commands.set(global_commands);
       interaction.replyEphemeral('set global commands!');
     });
