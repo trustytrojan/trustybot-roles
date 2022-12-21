@@ -2,7 +2,7 @@ import {
   GuildMember
 } from 'discord.js';
 
-import './reply-ephemeral.js';
+import './prototype.js';
 
 /**
  * Typing for VSCode

@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction } from 'discord.js';
 import { something_went_wrong } from '../utils.js';
-import '../reply-ephemeral.js';
+import '../prototype.js';
 
 /**
  * @param {ChatInputCommandInteraction} interaction 

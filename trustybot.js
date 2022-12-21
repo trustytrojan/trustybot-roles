@@ -13,14 +13,14 @@ import {
  * @typedef {import('discord.js').APIApplicationCommand} Command
  */
 
-import { format_error } from './utils.js';
+import { format_error, modal_row, modal_helper, extract_text } from './utils.js';
 import EventEmitter from 'events';
 import { inspect } from 'util';
-import './reply-ephemeral.js';
+import './prototype.js';
 
 const { ActionRow, Button } = ComponentType;
 const { Danger, Primary } = ButtonStyle;
-const { Paragraph } = TextInputStyle;
+const { Paragraph, Short } = TextInputStyle;
 
 const do_nothing = () => {};
 const wait = (x) => new Promise((resolve) => setTimeout(resolve, x));
@@ -43,8 +43,8 @@ export default class trustybot extends Client {
 
   // from options
   /** @type {() => any=} */ on_kill = do_nothing;
-  /** @type {Command[]=} */ guild_commands;
-  /** @type {Command[]=} */ global_commands;
+  /** @type {Command[]=} */ guild_commands = [];
+  /** @type {Command[]=} */ global_commands = [];
 
   /**
    * @param {ClientOptions} discord_options
@@ -56,8 +56,8 @@ export default class trustybot extends Client {
     if(trustybot_options) {
       const { on_kill, guild_commands, global_commands } = trustybot_options;
       if(on_kill) this.on_kill = on_kill;
-      this.guild_commands = guild_commands;
-      this.global_commands = global_commands;
+      if(guild_commands) this.guild_commands = guild_commands;
+      if(global_commands) this.global_commands = global_commands;
     }
 
     // make em readonly like typescript
@@ -90,32 +90,36 @@ export default class trustybot extends Client {
 
     this.button.on('kill', this.kill.bind(this));
 
-    if(guild_commands) {
-      this.button.on('guildcmds', async (interaction) => {
-        await this.application?.commands.set(guild_commands);
-        interaction.replyEphemeral('set guild commands!');
-      });
-    }
+    this.button.on('guildcmds', async (interaction) => {
+      await this.application?.commands.set(this.guild_commands);
+      interaction.replyEphemeral('set guild commands!');
+    });
 
-    if(global_commands) {
-      this.button.on('globalcmds', async (interaction) => {
-        await this.application?.commands.set(global_commands);
-        interaction.replyEphemeral('set global commands!');
-      });
-    }
+    this.button.on('globalcmds', async (interaction) => {
+      await this.application?.commands.set(this.global_commands);
+      interaction.replyEphemeral('set global commands!');
+    });
     
     this.button.on('eval', async (/** @type {ButtonInteraction} */ interaction) => {
       const { user } = interaction;
+
+      // obviously...
       if(user.id !== this.owner.id) { await interaction.reply('only my owner can use this command!'); return; }
+
       const modal_int = await modal_helper(interaction, 'eval', 60_000, [
         modal_row('expr', 'expression', Paragraph, true)
       ]);
       if(!modal_int) return;
+
       let [code] = extract_text(modal_int);
       if(code.includes('await')) code = `(async () => { ${code} })().catch(handleError)`;
+
+      // eval time
       let output;
       try { output = inspect(await eval(code), { depth: 0, showHidden: true }); }
-      catch(err) { this.handleError(err); return; }
+      catch(err) { modal_int.replyError(err); return; }
+
+      // format time
       let x;
       if(output.length <= 2000)
         x = '```js\n'+output+'```';
@@ -123,6 +127,8 @@ export default class trustybot extends Client {
         x = { embeds: [{ description: '```js\n'+output+'```' }] };
       else if(output.length > 4096)
         x = { files: [{ attachment: Buffer.from(output), name: 'output.js'}] };
+      
+      // send time
       modal_int.replyEphemeral(x);
     });
   }
@@ -160,13 +166,10 @@ export default class trustybot extends Client {
 
     const buttons = [
       { type: Button, label: 'kill bot process', custom_id: 'kill', style: Danger },
-      { type: Button, label: 'eval', custom_id: 'eval', style: Primary }
+      { type: Button, label: 'set guild commands', custom_id: 'guildcmds', style: Primary },
+      { type: Button, label: 'set global commands', custom_id: 'globalcmds', style: Primary },
+      { type: Button, label: 'eval', custom_id: 'eval', style: Primary },
     ];
-
-    if(this.guild_commands)
-      buttons.push({ type: Button, label: 'set guild commands', custom_id: 'guildcmds', style: Primary });
-    if(this.global_commands)
-      buttons.push({ type: Button, label: 'set global commands', custom_id: 'globalcmds', style: Primary });
 
     this.owner_buttons = await owner.send({
       content: 'owner buttons',
