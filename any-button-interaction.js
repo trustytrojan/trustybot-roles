@@ -1,12 +1,10 @@
-import { ButtonInteraction, Collection } from 'discord.js';
-import SingleRole from './SingleRole.js';
+import { ButtonInteraction } from 'discord.js';
 import './reply-ephemeral.js';
 
 export default async function any_button_interaction(
-  /** @type {ButtonInteraction} */ interaction,
-  /** @type {Collection<string, SingleRole>} */ single_roles
+  /** @type {ButtonInteraction} */ interaction
 ) {
-  const { message, customId, guild, member, channelId } = interaction;
+  const { message, customId, guild, member } = interaction;
 
   if(!guild) return;
 
@@ -16,11 +14,11 @@ export default async function any_button_interaction(
       interaction.replyEphemeral(`removed <@&${customId}>!`);
     } else {
       let replaced;
-      if(single_roles.get(channelId)?.messages.includes(message.id))
-        for(const { customId: x } of message.components[0].components) {
-          if(member.roles.cache.has(x)) {
-            await member.roles.remove(x);
-            replaced = `replaced <@&${x}> with <@&${customId}>!`;
+      if(message.content.includes('||single_rol||'))
+        for(const { customId: role } of message.components[0].components) {
+          if(member.roles.cache.has(role)) {
+            await member.roles.remove(role);
+            replaced = `replaced <@&${role}> with <@&${customId}>!`;
           }
         }
       await member.roles.add(customId);

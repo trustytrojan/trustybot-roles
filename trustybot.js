@@ -3,12 +3,17 @@ import {
   User,
   ComponentType,
   ButtonStyle,
-  ButtonInteraction,
   TextInputStyle,
 } from 'discord.js';
 
-import { guild_commands, global_commands } from './command-data.js';
-import { format_error, modal_row, modal_helper, extract_text } from './utils.js';
+/**
+ * Typing for VSCode
+ * @typedef {import('discord.js').ButtonInteraction} ButtonInteraction
+ * @typedef {import('discord.js').ClientOptions} ClientOptions
+ * @typedef {import('discord.js').APIApplicationCommand} Command
+ */
+
+import { format_error } from './utils.js';
 import EventEmitter from 'events';
 import { inspect } from 'util';
 import './reply-ephemeral.js';
@@ -19,20 +24,44 @@ const { Paragraph } = TextInputStyle;
 
 const do_nothing = () => {};
 
+/**
+ * @typedef {object} trustybot_options
+ * @prop {() => any=} on_kill
+ * @prop {Command[]=} guild_commands
+ * @prop {Command[]=} global_commands
+ */
+
 export default class trustybot extends Client {
+  // convenience emitters
   /** @type {EventEmitter} */ chat_input;
   /** @type {EventEmitter} */ button;
-  /** @type {() => any} */ on_kill;
+
+  // from discord
   /** @type {User} */ owner;
   /** @type {Message} */ owner_buttons;
 
-  constructor(o, on_kill) {
-    super(o);
+  // from options
+  /** @type {() => any=} */ on_kill;
+  /** @type {Command[]=} */ guild_commands;
+  /** @type {Command[]=} */ global_commands;
 
+  /**
+   * @param {ClientOptions} discord_options
+   * @param {trustybot_options=} trustybot_options
+   */
+  constructor(discord_options, trustybot_options) {
+    super(discord_options);
+
+    if(trustybot_options) {
+      const { on_kill, guild_commands, global_commands } = trustybot_options;
+      this.on_kill = on_kill ?? do_nothing;
+      this.guild_commands = guild_commands;
+      this.global_commands = global_commands;
+    }
+
+    // make em readonly like typescript
     Object.defineProperty(this, 'chat_input', { value: new EventEmitter(), writable: false });
     Object.defineProperty(this, 'button', { value: new EventEmitter(), writable: false });
-
-    if(on_kill) this.on_kill = on_kill ?? do_nothing;
 
     this.on('ready', async () => {
       console.log(`Logged in as ${this.user?.tag}!`);
@@ -56,17 +85,23 @@ export default class trustybot extends Client {
     process.on('SIGTERM', this.kill.bind(this));
     process.on('uncaughtException', (err) => { this.handleError(err); });
 
+    // owner button code
+
     this.button.on('kill', this.kill.bind(this));
 
-    this.button.on('guildcmds', async (interaction) => {
-      await this.application?.commands.set(guild_commands);
-      interaction.replyEphemeral('set guild commands!');
-    });
+    if(guild_commands) {
+      this.button.on('guildcmds', async (interaction) => {
+        await this.application?.commands.set(guild_commands);
+        interaction.replyEphemeral('set guild commands!');
+      });
+    }
 
-    this.button.on('globalcmds', async (interaction) => {
-      await this.application?.commands.set(global_commands);
-      interaction.replyEphemeral('set global commands!');
-    });
+    if(global_commands) {
+      this.button.on('globalcmds', async (interaction) => {
+        await this.application?.commands.set(global_commands);
+        interaction.replyEphemeral('set global commands!');
+      });
+    }
     
     this.button.on('eval', async (/** @type {ButtonInteraction} */ interaction) => {
       const { user } = interaction;
@@ -118,16 +153,19 @@ export default class trustybot extends Client {
   async sendOwnerButtons() {
     const owner = this.owner ?? await this.fetchOwner();
 
+    const buttons = [
+      { type: Button, label: 'kill bot process', custom_id: 'kill', style: Danger },
+      { type: Button, label: 'eval', custom_id: 'eval', style: Primary }
+    ];
+
+    if(this.guild_commands)
+      buttons.push({ type: Button, label: 'set guild commands', custom_id: 'guildcmds', style: Primary });
+    if(this.global_commands)
+      buttons.push({ type: Button, label: 'set global commands', custom_id: 'globalcmds', style: Primary });
+
     this.owner_buttons = await owner.send({
       content: 'owner buttons',
-      components: [
-        { type: ActionRow, components: [
-          { type: Button, label: 'kill bot process', custom_id: 'kill', style: Danger },
-          { type: Button, label: 'set guild commands', custom_id: 'guildcmds', style: Primary },
-          { type: Button, label: 'set global commands', custom_id: 'globalcmds', style: Primary },
-          { type: Button, label: 'eval', custom_id: 'eval', style: Primary }
-        ] }
-      ]
+      components: [{ type: ActionRow, components: buttons }]
     });
   }
 

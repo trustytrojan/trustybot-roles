@@ -1,5 +1,4 @@
 import trustybot from './trustybot.js';
-import SingleRole from './SingleRole.js';
 import token from './token.json' assert { type: 'json' };
 
 import view_roles from './commands/view-roles.js';
@@ -7,14 +6,12 @@ import button_roles from './commands/button-roles.js';
 import any_button_interaction from './any-button-interaction.js';
 import mass_manage_roles from './commands/mass-manage-roles.js';
 
-const single_roles = await SingleRole.readFromFile();
-
 const client = new trustybot({
   intents: [
     'Guilds',
     'GuildMembers'
   ]
-}, () => SingleRole.writeToFile(single_roles));
+});
 
 const { chat_input, button } = client;
 

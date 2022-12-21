@@ -55,7 +55,11 @@ export default async function button_roles(interaction, single_roles) {
     modal_row('content', 'message content', Paragraph, true)
   ]);
   if(!modal_int) return; // util function replied for us, so just return
-  const [content] = extract_text(modal_int);
+  let [content] = extract_text(modal_int);
+
+  // this is how the bot will identify single_role messages
+  if(single_role)
+    content = `${content} ||single_role||`;
 
   // construct final message with buttons          
   const final_message_components = [];
@@ -65,11 +69,8 @@ export default async function button_roles(interaction, single_roles) {
     final_message_components[ (final_message_components[0].components.length < 5) ? 0 : 1 ].components.push(b);
 
   // send message and save id if single_role was enabled
-  try {
-    const { id } = await modal_int.reply({ content, fetchReply: true, components: final_message_components });
-    if(single_role) single_roles.ensure(channelId, () => new SingleRole(channelId)).messages.push(id);
-  } catch(err) {
-    if(!(err instanceof Error)) return;
+  try { await modal_int.reply({ content, components: final_message_components }); }
+  catch(err) {
     if(err.message.includes('emoji'))
       reply_ephemeral(modal_int, 'invalid emoji(s) supplied!');
     else
