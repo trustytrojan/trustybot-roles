@@ -30,5 +30,7 @@ export default async function view_roles(interaction) {
     desc += role_line;
   }
 
+  embeds[i].description = desc;
+
   interaction.reply({ embeds });
 }
