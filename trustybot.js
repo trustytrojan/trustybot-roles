@@ -42,7 +42,7 @@ export default class trustybot extends Client {
   /** @type {Message} */ owner_buttons;
 
   // from options
-  /** @type {() => any=} */ on_kill;
+  /** @type {() => any=} */ on_kill = do_nothing;
   /** @type {Command[]=} */ guild_commands;
   /** @type {Command[]=} */ global_commands;
 
@@ -55,7 +55,7 @@ export default class trustybot extends Client {
 
     if(trustybot_options) {
       const { on_kill, guild_commands, global_commands } = trustybot_options;
-      this.on_kill = on_kill ?? do_nothing;
+      if(on_kill) this.on_kill = on_kill;
       this.guild_commands = guild_commands;
       this.global_commands = global_commands;
     }
@@ -84,7 +84,7 @@ export default class trustybot extends Client {
 
     process.on('SIGINT', this.kill.bind(this));
     process.on('SIGTERM', this.kill.bind(this));
-    process.on('uncaughtException', (err) => { this.handleError(err); });
+    process.on('uncaughtException', (err) => { this.handleError(err); this.kill(); });
 
     // owner button code
 
@@ -131,6 +131,7 @@ export default class trustybot extends Client {
     if(!this.application) {
       await wait(1_000);
       this.fetchOwner();
+      return;
     }
     const { owner } = await this.application.fetch();
     if(!(owner instanceof User)) throw 'kill yourself';
@@ -139,8 +140,7 @@ export default class trustybot extends Client {
 
   async handleError(/** @type {Error} */ err) {
     console.error(err);
-    const owner = this.owner ?? await this.fetchOwner();
-    owner.send(format_error(err)).catch(do_nothing);
+    this.owner?.send(format_error(err)).catch(do_nothing);
   }
 
   async clearOwnerDM() {
