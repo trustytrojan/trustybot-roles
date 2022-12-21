@@ -13,7 +13,7 @@ import {
   modal_row,
 } from '../utils.js';
 
-import '../reply-ephemeral.js';
+import '../prototype.js';
 
 const { ActionRow, Button } = ComponentType;
 const { Paragraph } = TextInputStyle;
@@ -22,7 +22,7 @@ const { Primary } = ButtonStyle;
 /**
  * @param {ChatInputCommandInteraction} interaction 
  */
-export default async function button_roles(interaction) {
+export default async function create_button_roles(interaction) {
   const { guild, options, channelId, member } = interaction;
 
   const myPerms = guild.members.me.permissions;
