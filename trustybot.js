@@ -23,6 +23,7 @@ const { Danger, Primary } = ButtonStyle;
 const { Paragraph } = TextInputStyle;
 
 const do_nothing = () => {};
+const wait = (x) => new Promise((resolve) => setTimeout(resolve, x));
 
 /**
  * @typedef {object} trustybot_options
@@ -127,6 +128,10 @@ export default class trustybot extends Client {
   }
 
   async fetchOwner() {
+    if(!this.application) {
+      await wait(1_000);
+      this.fetchOwner();
+    }
     const { owner } = await this.application.fetch();
     if(!(owner instanceof User)) throw 'kill yourself';
     return (this.owner = owner);
