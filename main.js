@@ -204,4 +204,4 @@ try {
 } catch(err) { _handleError(err); } });
 
 
-client.login(import_json('./token.json'));
+client.login(await import_json('./token.json'));
