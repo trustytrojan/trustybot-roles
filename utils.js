@@ -10,6 +10,8 @@ import {
 
 const { ActionRow, TextInput } = ComponentType;
 
+export const do_nothing = () => {};
+
 /**
  * Typing for VSCode
  * @typedef {import('discord.js').APIActionRowComponent<import('discord.js').APIModalActionRowComponent>} ModalRow

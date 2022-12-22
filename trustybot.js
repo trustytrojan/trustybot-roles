@@ -12,7 +12,7 @@ import {
  * @typedef {import('discord.js').ClientOptions} ClientOptions
  */
 
-import { format_error, modal_row, modal_sender, extract_text } from './utils.js';
+import { format_error, modal_row, modal_sender, extract_text, do_nothing } from './utils.js';
 import { inspect } from 'util';
 import './prototype.js';
 
@@ -20,7 +20,6 @@ const { ActionRow, Button } = ComponentType;
 const { Danger, Primary } = ButtonStyle;
 const { Paragraph } = TextInputStyle;
 
-const do_nothing = () => {};
 const wait = (x) => new Promise((resolve) => setTimeout(resolve, x));
 
 /**
