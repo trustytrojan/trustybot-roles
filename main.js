@@ -1,5 +1,13 @@
 import trustybot from './trustybot.js';
-import { import_json, something_went_wrong, modal_row, modal_sender, format_error, do_nothing } from './utils.js';
+import {
+  import_json,
+  something_went_wrong,
+  modal_row,
+  modal_sender,
+  format_error,
+  do_nothing,
+  extract_text
+} from './utils.js';
 import { single_role_identifier } from './roles-utils.js';
 
 import {
