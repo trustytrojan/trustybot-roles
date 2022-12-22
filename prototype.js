@@ -1,4 +1,4 @@
-import { BaseInteraction } from 'discord.js';
+import { BaseInteraction, EmbedBuilder } from 'discord.js';
 import { format_error } from './utils.js';
 
 BaseInteraction.prototype.replyEphemeral = function(x) {
@@ -15,4 +15,13 @@ BaseInteraction.prototype.replyEphemeral = function(x) {
  */
 BaseInteraction.prototype.replyError = function(err) {
   this.reply(format_error(err));
+};
+
+/**
+ * @param {string} name 
+ * @param {string} value 
+ * @param {boolean=} inline 
+ */
+EmbedBuilder.prototype.addField = function(name, value, inline) {
+  this.addFields({ name, value, inline });
 };

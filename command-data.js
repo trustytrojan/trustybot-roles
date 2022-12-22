@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType } from 'discord.js';
-const { Role, Boolean, String } = ApplicationCommandOptionType;
+const { Role, Boolean, String, Subcommand } = ApplicationCommandOptionType;
 
 const sr_option = {
   type: Boolean,
@@ -31,8 +31,15 @@ const choice = (x, y) => ({ name: x, value: y ?? x });
 /** @type {Command[]} */
 export const guild_commands = [
   { name: 'view_roles', description: 'view all roles in this server' },
-  { name: 'create_button_roles', description: '(manage roles required) create buttons that give roles on tap/click', options: [sr_option, ...roles_emojis_10] },
-  //{ name: 'create_dropdown_roles', description: '(manage roles required) create a dropdown menu for roles', options: [sr_option, ...roles_emojis_10] },
+  { name: 'create', description: 'create something', options: [
+    {
+      name: 'button_roles',
+      type: Subcommand,
+      description: '(manage roles required) create buttons that give roles on tap/click',
+      options: [sr_option, ...roles_emojis_10]
+    },
+    // dropdown_roles...?
+  ] },
   { name: 'mass_manage_roles', description: '(manage roles required) add/remove roles to/from all members', options: [
     {
       name: 'action',
