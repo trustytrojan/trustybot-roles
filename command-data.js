@@ -1,6 +1,11 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 const { Role, Boolean, String, Subcommand } = ApplicationCommandOptionType;
 
+/**
+ * Typing for VSCode
+ * @typedef {import('discord.js').APIApplicationCommand} Command
+ */
+
 const sr_option = {
   type: Boolean,
   name: 'single_role',
