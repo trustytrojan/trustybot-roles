@@ -3,7 +3,6 @@ import { import_json, something_went_wrong, modal_row, modal_sender, format_erro
 import { single_role_identifier } from './roles-utils.js';
 
 import {
-  EmbedBuilder,
   ButtonStyle,
   ComponentType
 } from 'discord.js';
@@ -31,9 +30,7 @@ client.on('interactionCreate', async (interaction) => {
 
   if(!interaction.inCachedGuild()) return;
   if(!interaction.isRepliable()) return;
-  const { guild, guildId, member } = interaction;
-  const tguild = tguilds.ensure(guildId, () => new TGuild({ guild: guildId }));
-  const embed = new EmbedBuilder().setColor('ffff75');
+  const { guild, member } = interaction;
 
 try {
   if(interaction.isChatInputCommand()) {
