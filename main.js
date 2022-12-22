@@ -126,20 +126,25 @@ try {
           const myRole = guild.members.me.roles.botRole;
         
           // check permissions
-          if(!myPerms.has('ManageRoles', true))
-            { interaction.replyEphemeral('i need `Manage Roles` perms to create button roles'); return; }
-          if(!member.permissions.has('ManageRoles', true))
-            { interaction.replyEphemeral('you need `Manage Roles` perms to create button roles'); return; }
+          if(!myPerms.has('ManageRoles', true)) {
+            interaction.replyEphemeral('i need `Manage Roles` perms to create button roles');
+            return;
+          }
+          if(!member.permissions.has('ManageRoles', true)) {
+            interaction.replyEphemeral('you need `Manage Roles` perms to create button roles');
+            return;
+          }
           
           // collect roles and create button objects
           const buttons = [];
           let single_role = false;
-          for(const { name, role, value } of options.data) {
+          for(const { name, role, value } of options.data[0].options) {
             if(name === 'single_role') {
               single_role = value;
             }
         
             else if(name.startsWith('role_')) {
+              // dynamic errors...?
               if(!role) { something_went_wrong(interaction, 'undefined role'); return; }
               if(role.comparePositionTo(myRole) > 0) {
                 interaction.replyEphemeral(`my role is lower than ${role}! please move me above this role so i can give it to members!`);
@@ -163,7 +168,7 @@ try {
         
           // this is how the bot will identify single_role messages
           if(single_role) {
-            content = `${content} ${single_role_identifier}`; // https://www.invisiblecharacter.org/
+            content = `${content}${single_role_identifier}`; // https://www.invisiblecharacter.org/
           }
         
           // construct final message with buttons          
