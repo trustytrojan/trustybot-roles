@@ -1,58 +1,16 @@
-import { ApplicationCommandOptionType } from 'discord.js';
-const { Role, Boolean, String, Subcommand } = ApplicationCommandOptionType;
+import trustybot from 'trustybot-base';
+const { chat_input, option } = trustybot.utils.APIObjectCreator.command;
 
-/**
- * Typing for VSCode
- * @typedef {import('discord.js').APIApplicationCommand} Command
- */
-
-const sr_option = {
-  type: Boolean,
-  name: 'single_role',
-  description: `restrict members to only one role?`,
-  required: true
-};
-
-const role_1 = { type: Role, name: 'role_1', description: 'role 1 (required)', required: true };
-
-const roles_emojis_10 = [
-  role_1,
-  { type: String, name: 'emoji_1', description: 'emoji for role 1' }
-];
-for(let i = 2; i <= 10; ++i) {
-  roles_emojis_10.push(
-    { type: Role, name: `role_${i}`, description: `role ${i}` },
-    { type: String, name: `emoji_${i}`, description: `emoji for role ${i}` }
-  );
-}
-
-const roles_24 = [role_1];
-for(let i = 2; i <= 24; ++i) {
-  roles_24.push({ type: Role, name: `role_${i}`, description: `role ${i}` });
-}
-
-const choice = (x, y) => ({ name: x, value: y ?? x });
-
-/** @type {Command[]} */
 export const guild_commands = [
-  { name: 'view_roles', description: 'view all roles in this server' },
-  { name: 'create', description: 'create something', options: [
-    {
-      name: 'button_roles',
-      type: Subcommand,
-      description: '(manage roles required) create buttons that give roles on tap/click',
-      options: [sr_option, ...roles_emojis_10]
-    },
-    // dropdown_roles...?
-  ] },
-  { name: 'mass_manage_roles', description: '(manage roles required) add/remove roles to/from all members', options: [
-    {
-      name: 'action',
-      type: String,
-      description: 'do you want to add or remove roles from all members?',
-      choices: [choice('add'), choice('remove')],
-      required: true
-    },
-    ...roles_24
-  ] },
+  chat_input('view_roles', 'view all roles in this server'),
+  chat_input('create', 'create something', [
+    option.subcommand('button_roles', 'create buttons that give roles on tap/click'),
+    option.subcommand('dropdown_roles', 'create a dropdown menu that gives roles on a selection'),
+  ]),
+  chat_input('mass_manage_member_roles', 'add/remove roles to/from all members', [
+    option.string('action', 'do you want to add or remove roles from all members?', { r: true, c: [
+      option.choice.string('Add'),
+      option.choice.string('Remove')
+    ] })
+  ])
 ];
