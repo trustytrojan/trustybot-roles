@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import trustybot from 'trustybot-base';
-const { import_json, APIObjectCreator, Modal } = trustybot.utils; 
-const { action_row } = APIObjectCreator.component;
+const { import_json, APIObjectCreator, Modal, format_error, do_nothing } = trustybot.utils; 
+const { action_row, button } = APIObjectCreator.component;
 import { single_role_identifier } from './utils.js';
 import {
   RoleSelectMenuBuilder,
@@ -15,6 +15,8 @@ import {
  * @typedef {import('discord.js').APIEmbed} APIEmbed
  * @typedef {import('discord.js').GuildMember} GuildMember
  * @typedef {import('discord.js').Role} Role
+ * @typedef {import('discord.js').APIButtonComponent} APIButtonComponent
+ * @typedef {import('discord.js').APIRoleSelectComponent} APIRoleSelectComponent
  */
 
 const client = new trustybot(
@@ -31,13 +33,21 @@ const client = new trustybot(
 
 /**
  * @typedef {object} MassManageRolesInProgress
- * @prop {'Add' | 'Remove'} action
- * @prop {'add' | 'remove'} action_lc
- * @prop {Collection<string, GuildMember | null>} members
+ * @prop {'add' | 'remove'} action
+ * @prop {IterableIterator<GuildMember | null>} members
+ */
+
+/**
+ * @typedef {object} ButtonRolesInProgress
+ * @prop {boolean} single_role
+ * @prop {APIButtonComponent[]} buttons
  */
 
 /** @type {Collection<string, MassManageRolesInProgress>} */
 const mass_manage_member_roles_in_progress = new Collection();
+
+/** @type {Collection<string, ButtonRolesInProgress>} */
+const button_roles_in_progress = new Collection();
 
 client.on('interactionCreate', async (interaction) => {
   function handle_error(err) {
@@ -48,7 +58,7 @@ client.on('interactionCreate', async (interaction) => {
 
   if(!interaction.inCachedGuild()) return;
   if(!interaction.isRepliable()) return;
-  const { guild, member } = interaction;
+  const { guild, member, channel, appPermissions, memberPermissions } = interaction;
 
 try {
   if(interaction.isChatInputCommand()) {
@@ -83,12 +93,20 @@ try {
       } break;
 
       case 'mass_manage_member_roles': {
+        if(!appPermissions.has('ManageRoles', true)) {
+          interaction.replyEphemeral('i need the `Manage Roles` permission to manage member roles!');
+          return;
+        }
+        if(!memberPermissions.has('ManageRoles', true)) {
+          interaction.replyEphemeral('you need `Manage Roles` perms to manage member roles!');
+          return;
+        }
+
         const action = options.getString('action', true);
         const customId = randomUUID();
 
         mass_manage_member_roles_in_progress.set(customId, {
-          action,
-          action_lc: action.toLowerCase()
+          action: action.toLowerCase()
         });
 
         const user_menu = new UserSelectMenuBuilder({
@@ -97,35 +115,62 @@ try {
           maxValues: 25
         });
 
-        interaction.replyEphemeral({
+        interaction.reply({
           embeds: [{
             title: 'Mass manage member roles',
             description: `Select the members you want to apply role changes to, or none if you want to select everyone.`,
             fields: [
               { name: 'Action', value: action },
-              { name: 'Members', value: '*waiting for selection...*', inline: true },
-              { name: 'Roles', value: '*waiting for selection...*', inline: true }
+              { name: 'Members', value: '*waiting...*', inline: true },
+              { name: 'Roles', value: '*waiting...*', inline: true }
             ]
           }],
-          components: [action_row(user_menu.data)]
+          components: [action_row(user_menu.data)],
+          ephemeral: true
         });
       } break;
 
       case 'create': switch(options.getSubcommand()) {
         case 'button_roles': {
-          const myPerms = guild.members.me.permissions;
-          const myRole = guild.members.me.roles.botRole;
+          const single_role = options.getBoolean('single_role', true);
         
           // check permissions
-          if(!myPerms.has('ManageRoles', true)) {
+          if(!appPermissions.has('ManageRoles', true)) {
             interaction.replyEphemeral('i need `Manage Roles` perms to create button roles');
             return;
           }
-          if(!member.permissions.has('ManageRoles', true)) {
+          if(!memberPermissions.has('ManageRoles', true)) {
             interaction.replyEphemeral('you need `Manage Roles` perms to create button roles');
             return;
           }
-          
+
+          // remember this interaction
+          const customId = randomUUID();
+          button_roles_in_progress.set(customId, {
+            buttons: [],
+            single_role
+          });
+
+          const role_menu = new RoleSelectMenuBuilder({
+            customId,
+            max_values: 10
+          });
+
+          // ask for roles
+          interaction.replyEphemeral({
+            embeds: [{
+              title: 'Creating button roles',
+              description: 'Choose the roles to be included in this set of button roles.',
+              fields: [
+                { name: 'Roles', value: '*waiting...*', inline: true },
+                { name: 'One role?', value: single_role ? 'Yes' : 'No', inline: true }
+              ]
+            }],
+            components: [action_row(role_menu)]
+          });
+        } break;
+
+        {
           // collect roles and create button objects
           const buttons = [];
           let single_role = false;
@@ -192,9 +237,9 @@ try {
       if(!obj) return;
       
       if(users.size > 0) {
-        obj.members = users.mapValues((v) => guild.members.resolve(v));
+        obj.members = users.map((v) => guild.members.resolve(v)).values();
       } else {
-        obj.members = guild.members.cache;
+        obj.members = guild.members.cache.values();
       }
 
       const role_menu = new RoleSelectMenuBuilder({
@@ -204,8 +249,8 @@ try {
       });
 
       const embed = new EmbedBuilder(message.embeds[0]);
-      embed.setDescription('Select the roles to apply to your selected members.');
       embed.data.fields[1].value = users.map((v) => v.toString()).join('\n');
+      embed.setDescription('Select the roles to apply to your selected members.');
 
       interaction.update({
         embeds: [embed.data],
@@ -215,11 +260,11 @@ try {
   }
 
   else if(interaction.isRoleSelectMenu()) {
-    const { customId, message } = interaction;
-    if(mass_manage_member_roles_in_progress.has(customId)) {
-      const obj = mass_manage_member_roles_in_progress.get(customId);
-      if(!obj) return;
-      const { action_lc, members } = obj;
+    const { customId, message, roles } = interaction;
+    let obj;
+
+    if(obj = mass_manage_member_roles_in_progress.get(customId)) {
+      const { action, members } = obj;
 
       const embed = new EmbedBuilder(message.embeds[0]);
       embed.setDescription(`Applying role changes to members...`);
@@ -229,29 +274,106 @@ try {
         components: []
       });
 
-      const total = members.size;
-      let n = total;
-      for(const member of members.values()) {
+      for(const member of members) {
         if(!member) continue;
-        try { await member.roles[action_lc](interaction.roles).catch(_handleError); }
+        try { await member.roles[action](roles).catch(_handleError); }
         catch { --n; }
       }
       
       embed.setDescription('Done!');
-      embed.setFields();
-      embed.addFields('Results', `Successfully applied role changes to ${n} of ${total} members.`);
+      embed.addField('Results', `Successfully applied the desired role changes to the selected members.`);
 
       interaction.editReply({
         embeds: [embed.data]
+      });
+    }
+
+    else if(obj = button_roles_in_progress.get(customId)) {
+      await interaction.deferUpdate();
+
+      const myRole = guild.members.me.roles.botRole;
+      const embed = new EmbedBuilder(message.embeds[0]);
+
+      for(const role of roles.values()) {
+        if(role.comparePositionTo(myRole) > 0) {
+          embed.setFields();
+          embed.setDescription(`**Error:** My role is lower than ${role}! Please move my role above this role so I can give it to members!`);
+
+          button_roles_in_progress.delete(customId);
+
+          interaction.editReply({
+            embeds: [embed.data],
+            components: []
+          });
+
+          return;
+        }
+        obj.buttons.push(button.primary(role.id, role.name));
+      }
+
+      embed.data.fields[0].value = roles.map((v) => v.toString()).join('\n');
+      embed.setDescription('You need to provide a message for these roles. Press the button below to submit a message.');
+
+      interaction.editReply({
+        embeds: [embed.data],
+        components: [action_row(
+          button.primary(customId, 'Enter message')
+        )]
       });
     }
   }
 
   else if(interaction.isButton()) {
     const { message, customId } = interaction;
+    let obj;
 
-    if(guild.roles.resolve(customId)) {
-      if(member.roles.resolve(customId)) {
+    if(obj = button_roles_in_progress.get(customId)) {
+      const embed = new EmbedBuilder(message.embeds[0]);
+
+      // the modal replies to the interaction
+      const [modal_int, text] = await Modal.send_and_receive(interaction, 'Message for button roles', 120_000, [
+        Modal.row.paragraph('content', 'message content', { r: true })
+      ]);
+      if(!modal_int) {
+        embed.setFields();
+        embed.setDescription(`You took too long to submit the form!`);
+
+        interaction.editReply({
+          embeds: [embed.data]
+        });
+
+        return;
+      }
+      if(!modal_int.isFromMessage()) return;
+
+      embed.setDescription(`Form received! Sending message...`);
+      await modal_int.update({
+        embeds: [embed.data]
+      });
+
+      let [content] = text;
+      if(obj.single_role) {
+        content = `${content}${single_role_identifier}`;
+      }
+
+      await channel.send({
+        content,
+        components: [action_row(obj.buttons)]
+      });
+
+      embed.setFields();
+      embed.setDescription(`Done! I've sent a message in this channel with the button roles.`);
+
+      interaction.editReply({
+        embeds: [embed.data],
+        components: []
+      });
+
+      button_roles_in_progress.delete(customId);
+    }
+
+    else if(guild.roles.cache.has(customId)) {
+      if(member.roles.cache.has(customId)) {
         await member.roles.remove(customId);
         interaction.replyEphemeral(`removed <@&${customId}>!`);
       } else {
@@ -268,7 +390,14 @@ try {
         interaction.replyEphemeral(replaced ?? `added <@&${customId}>!`);
       }
     }
+
+
   }
+
+  else if(interaction.isMessageContextMenuCommand()) {
+    const { targetMessage } = interaction;
+  }
+
 } catch(err) { handle_error(err); } });
 
 
