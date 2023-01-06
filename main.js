@@ -7,7 +7,8 @@ import {
   RoleSelectMenuBuilder,
   UserSelectMenuBuilder,
   Collection,
-  EmbedBuilder
+  EmbedBuilder,
+  ComponentType
 } from 'discord.js';
 
 /**
@@ -395,7 +396,47 @@ try {
   }
 
   else if(interaction.isMessageContextMenuCommand()) {
+    if(!memberPermissions.has('ManageRoles', true)) {
+      interaction.replyEphemeral('you need `Manage Roles` perms to create button roles');
+      return;
+    }
+
     const { targetMessage } = interaction;
+
+    if(targetMessage.components.length === 0) {
+      interaction.replyEphemeral(`this message does not have any components!`);
+      return;
+    }
+
+    const buttons = [];
+    for(const action_row of targetMessage.components) {
+      for(const button of action_row.components) {
+        if(button.type !== ComponentType.Button) {
+          interaction.replyEphemeral(`this message has non-button components!`);
+          return;
+        }
+        buttons.push(button);
+      }
+    }
+
+    let roles_str = '';
+    let i = 1;
+    for(const { customId, emoji } of buttons) {
+      roles_str += `\`${i++}:\`${emoji ? ` ${emoji}` : ''} <@&${customId}>\n`;
+    }
+
+    const embed = new EmbedBuilder({
+      title: 'Editing Button/Dropdown Roles',
+      description: 'Below are all the roles that this message has. You can edit these roles and their emojis.',
+      fields: [
+        { name: 'Roles (+ emojis)', value: roles_str }
+      ]
+    });
+
+    interaction.replyEphemeral({
+      embeds: [embed.data],
+      components: null
+    });
   }
 
 } catch(err) { handle_error(err); } });
